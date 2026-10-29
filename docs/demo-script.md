@@ -151,7 +151,7 @@ UI rather than hidden.”
 Run or show:
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q     # 78 passed
+cd backend && .venv/bin/python -m pytest -q     # 80 passed
 cd frontend && npm test                          # 47 passed
 cd frontend && npm run test:e2e                  # 44 passing, 22 platform skips
 cd frontend && npm run build                     # tsc + vite build

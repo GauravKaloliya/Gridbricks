@@ -29,6 +29,24 @@ def test_health(client):
     assert body["version"] == "0.1.0"
 
 
+def test_root_serves_html_landing_page(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    html = response.text
+    assert "Gridbricks Wind Forecast Analytics" in html
+    assert 'href="/docs"' in html
+    assert "/api/accuracy" in html
+    assert "2026-01-01" in html
+    assert "default-src 'none'" in response.headers["content-security-policy"]
+
+
+def test_root_is_not_in_openapi(client):
+    schema = client.get("/openapi.json").json()
+    assert "/" not in schema["paths"]
+    assert "/api/meta" in schema["paths"]
+
+
 def test_meta_documents_cutoff_and_scope(client):
     response = client.get("/api/meta")
     assert response.status_code == 200

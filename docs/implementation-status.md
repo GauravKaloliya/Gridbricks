@@ -16,14 +16,15 @@ alone.
 | Cutoff-aware forecast selection | Implemented, unit-tested | Exact-cutoff inclusive, post-cutoff rejected, duplicates and no-eligible cases |
 | Matching and metrics | Implemented, unit-tested | Hourly forecast vs mean of two half-hours; MAE/RMSE/MBE known-value tests; no-data nulls |
 | Decision-support analytics | Implemented, tested, verified | P90/P95 error, P90 shortfall, underforecast share, lead-time buckets; full-month values recorded below |
-| Backend API | Implemented, tested, live-verified | 78 pytest tests; `/health`, `/api/meta`, `/api/accuracy`, `/api/forecasts`, `/api/actuals`, `/api/forecast-revisions` |
+| Backend API | Implemented, tested, live-verified | 80 pytest tests; `/health`, `/api/meta`, `/api/accuracy`, `/api/forecasts`, `/api/actuals`, `/api/forecast-revisions`, plus the HTML landing page at `/` |
 | Observability | Implemented, tested | `X-Request-ID` accept/generate/expose, request id in error envelopes, structured access logs, 500 envelope tests |
 | React UI | Implemented, built, browser-verified | Four pages plus hourly/half-hourly data tabs, decision-support panel and CSV export; 47 Vitest tests across 11 files; route-level code splitting |
 | Themes | Implemented, tested, browser-verified | Paper, Light and Dark; first-visit chooser with live previews, header control, `localStorage` persistence, cross-tab sync, pre-paint restore, theme-aware chart palettes |
 | Site guide | Implemented, tested, browser-verified | 19 steps across all routes; frozen page, four scrim panels, spotlight, five card placements, keyboard control, focus trap and restore |
+| API landing page | Implemented, tested, browser-verified | `GET /` renders window, mode, cutoff and quickstart from live settings; strict CSP, no JavaScript, light/dark axe clean, excluded from OpenAPI |
 | Loading/error/empty/partial/fallback states | Implemented, tested, browser-verified | Error state observed with backend stopped; retry recovered when restarted |
 | Automated end-to-end tests | Implemented and passing | 44 passing Playwright results across 66 runs in Chromium, Firefox and WebKit: six analysis flows, five theme/guide flows and 7 axe checks (Chromium; four additional guide-geometry cases also Chromium-only) |
-| Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below) |
+| Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below). The backend landing page was separately audited in Paper and Dark at 1440×1000 and 390×844: zero critical or serious findings, zero horizontal overflow |
 | Docker | Implemented, **built and executed** | Both images built; both healthchecks green; deterministic snapshot smoke on isolated ports; live Elexon fetch through the container; frontend, SPA routing and CORS verified |
 | CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; run `40931090240` on `a75e631` passed all four jobs, including the theme/guide suite |
 | Deployment configuration | Prepared, **not executed** | Vercel Services config for the full stack, split Vercel + Heroku/Render path, `frontend/vercel.json`, `render.yaml`; no public URL claimed |
@@ -45,7 +46,7 @@ cd backend && .venv/bin/python -m pytest -q
 Result:
 
 ```text
-78 passed in 1.73s
+80 passed in 1.74s
 ```
 
 The suite covers WIND filtering, timestamp normalisation, exact-cutoff
@@ -57,7 +58,10 @@ upstream retries/timeouts, API schemas and status codes, snapshot validation,
 cache reuse and fallback, malformed upstream records, cache TTL expiry,
 oversized ranges, standardised 404/405 error envelopes, request-id
 generation/preservation/rejection, CORS header exposure, and unexpected-error
-envelopes. The Vercel entrypoint has its own subprocess test: it unsets
+envelopes. Two tests cover the root landing page: it returns `text/html` with
+the brand, `/docs` link, `/api/accuracy` path and January dates, it sets the
+strict CSP header, and `/` stays out of the OpenAPI paths. The Vercel entrypoint
+has its own subprocess test: it unsets
 `DATA_MODE`/`CACHE_DIR`, imports `app.vercel:app` and asserts snapshot mode,
 the `/tmp` cache directory and a 200 `/health`. A dedicated snapshot-invariant
 module loads the real 2.4 MB file and locks the full-month counts, metrics,
@@ -83,7 +87,7 @@ Test Files  11 passed (11)
 
 ```text
 tsc --noEmit  ✓
-vite build    ✓ built in 2.32s
+vite build    ✓ built in 3.30s
 dist/assets/index-*.css                 53.24 kB (gzip  10.28 kB)
 dist/assets/index-*.js                 322.78 kB (gzip 100.56 kB)
 dist/assets/DateAxisTick-*.js          384.36 kB (gzip 106.21 kB)  # Recharts
@@ -393,21 +397,20 @@ API_PORT=8030 WEB_PORT=8090 bash scripts/verify.sh
 Result, in one invocation:
 
 ```text
-==> Backend: pytest                         78 passed in 1.65s
+==> Backend: pytest                         80 passed in 1.77s
 ==> Frontend: typecheck                     clean
 ==> Frontend: unit tests                    47 passed (11 files)
-==> Frontend: production build              built in 2.32s
+==> Frontend: production build              built in 3.30s
 ==> Frontend: bundle budget                 PASS  largest 375.35 KiB (< 500 KiB)
-==> Playwright: Chromium, Firefox, WebKit   44 passed, 22 skipped (1.9m)
+==> Playwright: Chromium, Firefox, WebKit   44 passed, 22 skipped (2.3m)
 ==> Docker: compose configuration           valid
 ==> Docker: container smoke                 passed (both healthy, 744/744)
-Gate passed in 161s.
+Gate passed in 188s.
 ```
 
-Playwright ran with one worker because the gate sets it explicitly, so 1.9 m
+Playwright ran with one worker because the gate sets it explicitly, so 2.3 m
 is slower than the 3-worker standalone run. The Docker section reused cached
-layers on this rerun; the first cold run took 175 s because it pulled the
-`python:3.12-slim` base for the first time.
+layers on this run; container images were 53.7 MB and 21.9 MB.
 
 `--no-e2e` and `--no-docker` skip stages for faster loops. The gate mirrors
 the four jobs in `.github/workflows/ci.yml`.
@@ -482,12 +485,12 @@ used and no deployment was performed.
 | Gate | Expected | Actual status |
 | --- | --- | --- |
 | **A** — requirements and real API verified | Params, units, availability, cutoff ambiguity | **PASS** — documented in `docs/elexon-api-notes.md`; no fabricated schema |
-| **B** — domain correctness | Selection/matching/metrics tested before UI | **PASS** — 78 backend tests, including full-month snapshot invariants |
+| **B** — domain correctness | Selection/matching/metrics tested before UI | **PASS** — 80 backend tests, including full-month snapshot invariants |
 | **C** — backend API | Starts, schemas, status codes, CORS, request ids | **PASS** — live service, container service and API tests |
 | **D** — React UI | Core use cases and explicit states | **PASS** — 47 unit tests + 44 E2E passes across Chromium, Firefox and WebKit, including the theme chooser and 19-step guide + browser walkthroughs at 320–1440 px |
 | **E** — Docker | Containers build, start and serve real data | **PASS** — deterministic snapshot smoke: both healthchecks, 744/744 API, SPA deep link, CORS, request id; plus earlier live-fetch and `$PORT` checks |
 | **F** — Deployment | Public URL verified | **NOT PERFORMED** — Vercel Services and split-deploy configs prepared and locally exercised with `vercel dev --local`; no credentials used and no URL claimed |
-| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 161 s; GitHub Actions run `40931090240` passed all four jobs with the theme/guide suite |
+| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 188 s; GitHub Actions run `40931090240` passed all four jobs with the theme/guide suite |
 
 ## Requirement traceability
 

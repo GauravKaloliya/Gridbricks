@@ -64,7 +64,7 @@ missing value, and failed request is visible and traceable.
 | **Storage** | No database. A 2,511,322-byte provenance-stamped snapshot plus an optional 7-day disk cache. |
 | **Experience** | Three themes (Paper, Light, Dark) with a first-visit chooser and live preview; a 19-step site guide that freezes the page and spotlights each control. |
 | **Result** | 744 / 744 intervals matched; MAE **2,122.81 MW**, RMSE **2,616.69 MW**, MBE **+1,840.30 MW**. |
-| **Verification** | 78 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, Docker smoke, hosted CI green on this commit. |
+| **Verification** | 80 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, HTML landing page axe clean in light and dark, Docker smoke, hosted CI green on pushed commit `a75e631` (78 backend tests at that point). |
 | **Deployment** | Vercel Services config committed and exercised locally; Docker/Render/Heroku paths documented. **Not publicly deployed.** |
 | **License** | MIT. Data attribution: public Elexon BMRS data. |
 
@@ -72,14 +72,14 @@ missing value, and failed request is visible and traceable.
 
 | Area | Lines | Detail |
 | --- | ---: | --- |
-| Python application | 1,921 | 4 domain modules, 3 data modules, 5 core modules, API, services, schemas, 2 entrypoints |
-| Python tests | 1,240 | 78 tests across 11 files |
+| Python application | 2,746 | 4 domain modules, 3 data modules, 5 core modules, API, services, schemas, landing page, 2 entrypoints |
+| Python tests | 1,258 | 80 tests across 11 files |
 | Frontend TypeScript/TSX | 5,466 | 5 pages, 22 components, 3 providers, query hooks, typed API client, formatting, CSV, theme palettes, guide steps |
 | Frontend tests | 1,012 | 47 tests across 11 files |
 | Stylesheet | 481 | Tailwind layers, editorial typography, responsive table-to-card rules, theme tokens, guide spotlight |
 | E2E specs | 642 | 6 analysis flows, 9 theme and guide flows, 7 axe checks |
-| Documentation | 4,034 | This README plus 7 documents in `docs/` |
-| **Code + tests** | **10,762** | Excludes documentation, lockfiles, fonts, and the data snapshot |
+| Documentation | 4,070 | This README plus 7 documents in `docs/` |
+| **Code + tests** | **11,605** | Excludes documentation, lockfiles, fonts, and the data snapshot |
 
 ---
 
@@ -407,14 +407,14 @@ provenance block. It never fills gaps.
 
 | Command | What it does | Observed |
 | --- | --- | --- |
-| `bash scripts/verify.sh` | Full local gate: backend, unit, build, budget, three-browser E2E, Docker smoke | **161 s**, exit 0 |
+| `bash scripts/verify.sh` | Full local gate: backend, unit, build, budget, three-browser E2E, Docker smoke | **188 s**, exit 0 |
 | `bash scripts/verify.sh --no-docker` | Same gate without rebuilding containers | Skips Compose |
 | `bash scripts/verify.sh --no-e2e` | Skips Playwright for a fast loop | Skips E2E |
 | `bash scripts/smoke.sh` | Builds and asserts the Compose stack in snapshot mode | Passed |
-| `cd backend && python -m pytest -q` | Backend suite | **78 passed in 1.73 s** |
+| `cd backend && python -m pytest -q` | Backend suite | **80 passed in 1.74 s** |
 | `cd frontend && npx tsc --noEmit` | Strict typecheck | Clean |
 | `cd frontend && npx vitest run` | Frontend unit suite | **47 passed** |
-| `cd frontend && npm run build` | Typecheck + production build | **2.32 s** |
+| `cd frontend && npm run build` | Typecheck + production build | **3.30 s** |
 | `cd frontend && node scripts/check-bundle-budget.mjs` | Largest-chunk budget | **384.36 kB (375.35 KiB) < 500 KiB** |
 | `cd frontend && npm run test:e2e` | Playwright across Chromium, Firefox, WebKit | **44 passed, 22 skipped** |
 | `cd frontend && npx playwright test e2e/theme-guide.spec.ts --project=chromium` | Theme and guide flows plus the guide geometry regression | **9 passed** |
@@ -894,7 +894,7 @@ Excel opens it correctly, and the object URL is revoked after the click.
 | Largest async chunk (Recharts/date axis) | 384.4 kB |
 | Largest allowed chunk | 500 kB |
 | CSS | 53.2 kB |
-| Production build | 2.32 s |
+| Production build | 3.30 s |
 | Fonts | Self-hosted, unicode-range subsets |
 
 The budget script reads the largest chunk from `dist/assets` and compares it
@@ -1327,10 +1327,17 @@ Local base URL: `http://localhost:8000`. Interactive OpenAPI docs: `/docs`.
 OpenAPI schema: `/openapi.json`. Full examples:
 [`docs/api.md`](docs/api.md).
 
+The bare host (`/`) serves a dependency-free HTML landing page rendered from
+the running settings: effective window, data mode, cutoff, a copy-ready `curl`
+quickstart and links to `/docs`, `/redoc`, `/health` and `/openapi.json`. It
+uses no JavaScript, honours `prefers-color-scheme`, and is excluded from the
+OpenAPI schema.
+
 ### Endpoints
 
 | Method | Endpoint | Purpose | Main fields |
 | --- | --- | --- | --- |
+| `GET` | `/` | HTML landing and quickstart page (not in OpenAPI) | Window, mode, cutoff, endpoint links |
 | `GET` | `/health` | Liveness, version, data mode | `status`, `version`, `data_mode` |
 | `GET` | `/api/meta` | Period, resolution, cutoff rule, attribution, disclaimer | `cutoff`, `source_attribution`, `disclaimer` |
 | `GET` | `/api/accuracy?start_date=…&end_date=…` | Metrics, decision support, counts, interval rows | `counts`, `metrics`, `decision_support`, `intervals`, `freshness` |
@@ -1501,11 +1508,11 @@ Notes:
 
 | Measurement | Observed |
 | --- | ---: |
-| Backend tests | 1.73 s for 78 tests |
+| Backend tests | 1.74 s for 80 tests |
 | Frontend typecheck | clean |
-| Frontend production build | 2.32 s |
+| Frontend production build | 3.30 s |
 | Bundle budget | 384.36 kB decimal / 375.35 KiB largest chunk (< 500 KiB) |
-| Local full gate | 161 s, exit 0 |
+| Local full gate | 188 s, exit 0 |
 | Docker backend image | 53.7 MB |
 | Docker frontend image | 21.9 MB |
 
@@ -1535,14 +1542,14 @@ into Python on stdin.
 
 | Layer | Result | Command | Scope |
 | --- | --- | --- | --- |
-| Backend | **78 passed** | `cd backend && python -m pytest -q` | Domain, data, API, observability, robustness, snapshot invariants |
+| Backend | **80 passed** | `cd backend && python -m pytest -q` | Domain, data, API, landing page, observability, robustness, snapshot invariants |
 | Frontend unit | **47 passed** | `cd frontend && npx vitest run` | Formatting, API client, state components, tables, CSV, overview, theme and guide state |
 | Typecheck | **clean** | `cd frontend && npx tsc --noEmit` | Strict TypeScript |
 | End-to-end | **44 passed, 22 skipped, 66 runs** | `cd frontend && npm run test:e2e` | 6 analysis + 9 theme/guide flows × 3 browsers; 7 axe checks on Chromium |
 | Accessibility | **axe critical/serious clean** | `cd frontend && npm run test:e2e` | Four routes, the theme chooser, the guide overlay, and the dark theme |
 | Container smoke | **passed** | `bash scripts/smoke.sh` | Build, health, 744/744 API, SPA deep link, CORS, request IDs |
 | Bundle budget | **passed** | `node scripts/check-bundle-budget.mjs` | 500 KiB per-chunk limit |
-| Full local gate | **passed in 161 s** | `bash scripts/verify.sh` | Everything above plus Compose config |
+| Full local gate | **passed in 188 s** | `bash scripts/verify.sh` | Everything above plus Compose config |
 
 ### Backend matrix
 
@@ -1639,11 +1646,14 @@ traces and screenshots are retained on failure.
 The complete ledger, including exact outputs and known gaps, is
 [`docs/implementation-status.md`](docs/implementation-status.md). In summary:
 
-- Local gate executed on this machine: **161 s, exit 0**.
+- Local gate executed on this machine: **188 s, exit 0**.
 - Hosted CI green: run `40931090240`, all four jobs in 3m32s on `a75e631`,
   including the theme and guide suite.
 - Theme and guide covered by 47 unit tests and 44 E2E passes across three
   browsers; guide geometry audited at five viewports, all passing.
+- Backend landing page rendered from live settings and audited with axe at
+  1440×1000 and 390×844 in Paper and Dark: zero critical or serious findings,
+  zero horizontal overflow. CSP blocks injected scripts by design.
 - Docker smoke green: 744/744 API rows, both healthchecks, SPA deep link, CORS,
   request IDs.
 - Vercel config exercised with `vercel dev --local`; **not deployed**.
@@ -1657,17 +1667,18 @@ The complete ledger, including exact outputs and known gaps, is
 .
 ├── backend/
 │   ├── app/
-│   │   ├── api/routes.py              # six endpoints
+│   │   ├── api/routes.py              # six JSON endpoints
 │   │   ├── core/                      # settings, logging, request ids, errors, time utils
 │   │   ├── data/                      # Elexon client, repository, snapshot store
 │   │   ├── domain/                    # cutoff, selection, matching, metrics
+│   │   ├── landing.py                 # dependency-free HTML page served at /
 │   │   ├── schemas/models.py          # frozen Pydantic contracts
 │   │   ├── services/analysis.py       # range resolution and orchestration
 │   │   ├── main.py                    # app, middleware order, error handlers
 │   │   └── vercel.py                  # serverless entrypoint (snapshot mode)
 │   ├── data/snapshot_january_2026.json  # real Elexon Jan 2026 snapshot (2.4 MiB)
 │   ├── scripts/build_snapshot.py      # rebuilds the snapshot from live data
-│   ├── tests/                         # 78 tests across 11 files
+│   ├── tests/                         # 80 tests across 11 files
 │   ├── requirements.txt               # runtime pins
 │   ├── requirements-dev.txt           # runtime + pytest/respx
 │   ├── .python-version                # 3.12 for Vercel
@@ -1834,7 +1845,7 @@ exercised; **Local only** = configured and exercised locally, not deployed;
 | TEST-01 | At least one E2E path | **Verified** | 44 passing Playwright results across three browsers |
 | OPS-01 | Docker | **Verified** | Snapshot smoke with both healthchecks, 744/744 API, SPA routing, CORS |
 | OPS-02 | Vercel/Heroku deployment | **Local only** | Vercel Services config exercised with `vercel dev --local`; no URL claimed |
-| OPS-03 | CI workflow | **Verified** | Local gate 161 s including 44 E2E passes with themes and the guide; GitHub Actions run `40931090240` green with the same suite |
+| OPS-03 | CI workflow | **Verified** | Local gate 188 s including 44 E2E passes with themes and the guide; GitHub Actions run `40931090240` green with the same suite |
 | DOC-01/02 | README + AI disclosure | **Verified** | This README and the disclosure below |
 | DEL-01 | Public repository | **Verified** | `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Pending** | Require recording and human submission |

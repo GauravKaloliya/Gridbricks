@@ -4,6 +4,10 @@ Base URL (local): `http://localhost:8000`
 
 Interactive OpenAPI documentation: `/docs` · OpenAPI schema: `/openapi.json`
 
+The bare host serves a self-contained HTML landing page at `/` that documents
+the effective analysis window, data mode, cutoff rule and every route. It is
+not part of the OpenAPI schema; see `GET /` below.
+
 All timestamps are ISO-8601 UTC with a `Z` suffix. Generation values are in
 **MW**. Delivery dates are inclusive and must fall within the configured
 analysis period (2026-01-01 to 2026-01-31).
@@ -41,6 +45,24 @@ failure can be traced to one server log line.
 A live-fetch failure normally still returns **200** with
 `freshness.data_state = "snapshot_fallback"` and a visible note/warning,
 because the bundled snapshot is real Elexon data.
+
+---
+
+## `GET /`
+
+Human-facing HTML landing page, served by the API process itself. It renders
+the effective analysis window, resolution, decision cutoff, data mode and
+version from the running settings, plus a quickstart `curl` block and links to
+`/docs`, `/redoc`, `/health` and `/openapi.json`.
+
+- `Content-Type: text/html; charset=utf-8`
+- No JavaScript and no external assets; a strict
+  `Content-Security-Policy: default-src 'none'` allows inline styles and the
+  inline SVG mark only.
+- Honours `prefers-color-scheme` and is keyboard-navigable.
+- Excluded from the OpenAPI schema (`include_in_schema=False`), so generated
+  clients only see the JSON API.
+- Cacheable for five minutes (`Cache-Control: public, max-age=300`).
 
 ---
 

@@ -5,7 +5,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import router
@@ -13,6 +13,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.logging import configure_logging, get_logger
 from app.core.request_context import RequestContextMiddleware
+from app.landing import render_landing
 
 configure_logging()
 logger = get_logger(__name__)
@@ -118,17 +119,20 @@ async def handle_unexpected_error(request: Request, exc: Exception) -> JSONRespo
     )
 
 
-@app.get("/", tags=["system"])
-async def root() -> dict:
-    return {
-        "name": settings.app_name,
-        "docs": "/docs",
-        "health": "/health",
-        "analysis_period": [
-            settings.analysis_start.isoformat(),
-            settings.analysis_end.isoformat(),
-        ],
-    }
+@app.get("/", tags=["system"], include_in_schema=False, response_class=HTMLResponse)
+async def root() -> HTMLResponse:
+    return HTMLResponse(
+        render_landing(settings, app.version),
+        headers={
+            "Content-Security-Policy": (
+                "default-src 'none'; style-src 'unsafe-inline'; img-src data:; "
+                "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+            ),
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Cache-Control": "public, max-age=300",
+        },
+    )
 
 
 app.include_router(router)
