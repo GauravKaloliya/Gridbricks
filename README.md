@@ -64,7 +64,7 @@ missing value, and failed request is visible and traceable.
 | **Storage** | No database. A 2,511,322-byte provenance-stamped snapshot plus an optional 7-day disk cache. |
 | **Experience** | Three themes (Paper, Light, Dark) with a first-visit chooser and live preview; a 19-step site guide that freezes the page and spotlights each control. |
 | **Result** | 744 / 744 intervals matched; MAE **2,122.81 MW**, RMSE **2,616.69 MW**, MBE **+1,840.30 MW**. |
-| **Verification** | 78 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, Docker smoke, hosted CI green on the published commit (before the theme/guide work). |
+| **Verification** | 78 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, Docker smoke, hosted CI green on this commit. |
 | **Deployment** | Vercel Services config committed and exercised locally; Docker/Render/Heroku paths documented. **Not publicly deployed.** |
 | **License** | MIT. Data attribution: public Elexon BMRS data. |
 
@@ -78,7 +78,7 @@ missing value, and failed request is visible and traceable.
 | Frontend tests | 1,012 | 47 tests across 11 files |
 | Stylesheet | 481 | Tailwind layers, editorial typography, responsive table-to-card rules, theme tokens, guide spotlight |
 | E2E specs | 642 | 6 analysis flows, 9 theme and guide flows, 7 axe checks |
-| Documentation | 4,028 | This README plus 7 documents in `docs/` |
+| Documentation | 4,034 | This README plus 7 documents in `docs/` |
 | **Code + tests** | **10,762** | Excludes documentation, lockfiles, fonts, and the data snapshot |
 
 ---
@@ -493,7 +493,7 @@ If you prefer separate hosts:
 | Docker Compose | **Verified** | Images 53.7 MB / 21.9 MB; smoke asserts both healthchecks, 744/744 API rows, SPA deep link, CORS, request IDs |
 | Vercel Services config | **Validated locally, not deployed** | `vercel dev --local` served `/health`, `/api/meta`, full-month accuracy (744 rows), `/`, `/accuracy`, `/openapi.json`, `/docs`, and `X-Request-ID` |
 | Public hosting URL | **Not performed** | No credentials used; no URL claimed |
-| Hosted CI | **Verified** | GitHub Actions run `40907058285` passed all four jobs in 2m37s on the published commit, before the theme and guide work |
+| Hosted CI | **Verified** | GitHub Actions run `40931090240` passed all four jobs in 3m32s on `a75e631`, including the theme and guide suite |
 
 > **Deployment status:** the configuration is committed and has been exercised
 > locally with `vercel dev --local` and the Docker smoke. **No public URL is
@@ -1511,24 +1511,21 @@ Notes:
 
 ### Hosted CI
 
-Run `40907058285` on commit `032f84c`, total **2m37s**:
+Run `40931090240` on commit `a75e631`, total **3m32s**, including the
+three-theme and site-guide suite:
 
 | Job | Duration | Result |
 | --- | ---: | --- |
-| Backend tests | 18 s | Pass |
-| Frontend typecheck, tests and build | 28 s | Pass |
-| Playwright end-to-end | 2m04s | Pass |
-| Container build and smoke | 51 s | Pass |
+| Backend tests | 11 s | Pass |
+| Frontend typecheck, tests and build | 25 s | Pass |
+| Container build and smoke | 52 s | Pass |
+| Playwright end-to-end | 3m02s | Pass |
 
-The earlier green run `40906353001` took 2m54s. The first run
-`40905624417` failed container smoke because the full-month JSON
-(279,016 bytes) was passed as a command-line argument and exceeded Linux's
-per-argument limit; the script now pipes JSON into Python on stdin.
-
-This run predates the three-theme and site-guide work. Those features are
-verified locally by the unit, E2E, axe, and guide-geometry runs described in
-[Testing and evidence](#testing-and-evidence); they enter hosted CI with the
-next push.
+The earlier green run `40907058285` took 2m37s and predates those features;
+`40906353001` took 2m54s. The first run `40905624417` failed container smoke
+because the full-month JSON (279,016 bytes) was passed as a command-line
+argument and exceeded Linux's per-argument limit; the script now pipes JSON
+into Python on stdin.
 
 ---
 
@@ -1643,8 +1640,8 @@ The complete ledger, including exact outputs and known gaps, is
 [`docs/implementation-status.md`](docs/implementation-status.md). In summary:
 
 - Local gate executed on this machine: **161 s, exit 0**.
-- Hosted CI green: run `40907058285`, all four jobs, on the published commit
-  before the theme and guide work.
+- Hosted CI green: run `40931090240`, all four jobs in 3m32s on `a75e631`,
+  including the theme and guide suite.
 - Theme and guide covered by 47 unit tests and 44 E2E passes across three
   browsers; guide geometry audited at five viewports, all passing.
 - Docker smoke green: 744/744 API rows, both healthchecks, SPA deep link, CORS,
@@ -1837,7 +1834,7 @@ exercised; **Local only** = configured and exercised locally, not deployed;
 | TEST-01 | At least one E2E path | **Verified** | 44 passing Playwright results across three browsers |
 | OPS-01 | Docker | **Verified** | Snapshot smoke with both healthchecks, 744/744 API, SPA routing, CORS |
 | OPS-02 | Vercel/Heroku deployment | **Local only** | Vercel Services config exercised with `vercel dev --local`; no URL claimed |
-| OPS-03 | CI workflow | **Verified** | Local gate 161 s including 44 E2E passes with themes and the guide; GitHub Actions run `40907058285` green before that work |
+| OPS-03 | CI workflow | **Verified** | Local gate 161 s including 44 E2E passes with themes and the guide; GitHub Actions run `40931090240` green with the same suite |
 | DOC-01/02 | README + AI disclosure | **Verified** | This README and the disclosure below |
 | DEL-01 | Public repository | **Verified** | `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Pending** | Require recording and human submission |

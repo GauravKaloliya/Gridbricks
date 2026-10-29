@@ -1,6 +1,6 @@
 # Implementation status and verification ledger
 
-Last updated: 2026-10-29
+Last updated: 2026-10-30
 
 This ledger records what was actually built and executed. It distinguishes
 **implemented**, **tested locally**, **verified in the browser**, **blocked**,
@@ -25,7 +25,7 @@ alone.
 | Automated end-to-end tests | Implemented and passing | 44 passing Playwright results across 66 runs in Chromium, Firefox and WebKit: six analysis flows, five theme/guide flows and 7 axe checks (Chromium; four additional guide-geometry cases also Chromium-only) |
 | Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below) |
 | Docker | Implemented, **built and executed** | Both images built; both healthchecks green; deterministic snapshot smoke on isolated ports; live Elexon fetch through the container; frontend, SPA routing and CORS verified |
-| CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; the hosted run on `main` passed all four jobs |
+| CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; run `40931090240` on `a75e631` passed all four jobs, including the theme/guide suite |
 | Deployment configuration | Prepared, **not executed** | Vercel Services config for the full stack, split Vercel + Heroku/Render path, `frontend/vercel.json`, `render.yaml`; no public URL claimed |
 | Vercel serverless entrypoint | Implemented, tested, **validated locally** | `backend/app/vercel.py`; entrypoint test in the backend suite; `vercel dev --local` served `/health`, `/api/*`, `/docs` and SPA deep links |
 | README and docs | Implemented | README with required sections, API reference, verified API notes, deployment runbook, demo outline |
@@ -430,11 +430,21 @@ Playwright end-to-end                success
 Container build and smoke            success
 ```
 
-A later run, `40907058285` on commit `032f84c`, also passed all four jobs. Both
-hosted runs predate the theme and site guide features; the theme/guide code is
-covered by the local gate (44 E2E passes) and enters hosted CI with the next
-push. No claim is made here that the hosted workflow has executed those
-features.
+A later run, `40907058285` on commit `032f84c`, also passed all four jobs.
+
+Run `40931090240` on commit `a75e631` was the first hosted run to include the
+three-theme and site-guide work. All four jobs passed in 3m32s:
+
+```text
+Backend tests                        success   11s
+Frontend typecheck, tests and build  success   25s
+Playwright end-to-end                success   3m02s
+Container build and smoke            success   52s
+```
+
+That run executes the same suite as the local gate: 78 backend tests, 47
+frontend unit tests in 11 files, the 66-run Playwright matrix and the container
+smoke.
 
 The argument-length failure is the kind of platform difference only a hosted
 run exposes; the local gate could not reproduce it.
@@ -477,7 +487,7 @@ used and no deployment was performed.
 | **D** — React UI | Core use cases and explicit states | **PASS** — 47 unit tests + 44 E2E passes across Chromium, Firefox and WebKit, including the theme chooser and 19-step guide + browser walkthroughs at 320–1440 px |
 | **E** — Docker | Containers build, start and serve real data | **PASS** — deterministic snapshot smoke: both healthchecks, 744/744 API, SPA deep link, CORS, request id; plus earlier live-fetch and `$PORT` checks |
 | **F** — Deployment | Public URL verified | **NOT PERFORMED** — Vercel Services and split-deploy configs prepared and locally exercised with `vercel dev --local`; no credentials used and no URL claimed |
-| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 161 s; GitHub Actions runs `40906353001` and `40907058285` passed all four jobs, before the theme/guide work |
+| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 161 s; GitHub Actions run `40931090240` passed all four jobs with the theme/guide suite |
 
 ## Requirement traceability
 
@@ -500,7 +510,7 @@ used and no deployment was performed.
 | TEST-01 | At least one E2E path | Verified | 44 passing Playwright results across three browsers: tooltip stability, date selection to metrics, explorer revisions, deep-linked audit, CSV export, failure/retry, axe, theme persistence and preview, guide navigation, freeze and geometry |
 | OPS-01 | Docker | **Verified** | Snapshot compose smoke with both healthchecks, 744/744 API, SPA routing, CORS, request id; earlier live-fetch and `$PORT` checks |
 | OPS-02 | Vercel/Heroku deployment | **Config prepared and locally validated, not deployed** | One-project Vercel Services config exercised with `vercel dev --local`; split Vercel + Heroku/Render path documented; no URL claimed |
-| OPS-03 | CI workflow | **Verified locally and on GitHub** | `.github/workflows/ci.yml`; hosted runs `40906353001` and `40907058285` passed all four jobs before the theme/guide work; local gate passes 44/22 E2E with those features |
+| OPS-03 | CI workflow | **Verified locally and on GitHub** | `.github/workflows/ci.yml`; hosted run `40931090240` passed backend, frontend, Playwright and container smoke with the theme/guide suite |
 | DOC-01/02 | README + AI disclosure | Implemented | `README.md` includes all required sections |
 | DEL-01 | Public repository | **Published** | `main` pushed to `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Manual, pending** | Require recording and human submission |
@@ -515,10 +525,9 @@ used and no deployment was performed.
   Firefox and WebKit, and responsive layout was checked at 320, 390, 606, 768
   and 1440 px in Chromium. No physical mobile device or screen-reader session
   was run; axe remains Chromium-only.
-- **Hosted CI is green but predates the theme and guide.** Runs `40906353001`
-  and `40907058285` passed all four jobs before those features existed; the
-  local gate is the only execution that includes them. The local gate remains
-  the faster path for iteration.
+- **Hosted CI is green on the theme and guide.** Run `40931090240` passed all
+  four jobs with that suite. A later documentation-only commit would need its
+  own run to be covered. The local gate remains the faster path for iteration.
 - **Guide geometry is not pixel-tested for every step.** The full-outline,
   freeze and mobile cases are asserted at two viewports; other step/viewport
   combinations rely on the geometry logic and manual review.
