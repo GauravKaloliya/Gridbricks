@@ -1,0 +1,18 @@
+# Local build and runtime artifacts (never needed by a deployment)
+backend/.venv
+backend/.cache
+backend/.pytest_cache
+backend/tests
+backend/**/__pycache__
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/test-results
+frontend/playwright-report
+frontend/e2e
+frontend/.screenshots
+.env
+.env.*
+!.env.example
+!frontend/.env.example
+*.log

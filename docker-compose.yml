@@ -1,0 +1,53 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: gridbricks-backend:local
+    environment:
+      APP_ENV: docker
+      DATA_MODE: ${DATA_MODE:-live}
+      ANALYSIS_START: "2026-01-01"
+      ANALYSIS_END: "2026-01-31"
+      DECISION_CUTOFF_TIME: "09:30"
+      DECISION_CUTOFF_TZ: Europe/London
+      DECISION_CUTOFF_INCLUSIVE: "true"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      CACHE_TTL_SECONDS: "604800"
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8000}
+    image: gridbricks-frontend:local
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - /dev/null
+        - http://127.0.0.1/healthz
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

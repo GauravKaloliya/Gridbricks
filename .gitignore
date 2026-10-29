@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Backend runtime cache (contains fetched data, regenerable)
+backend/.cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+!frontend/.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/
+
+# Local visual-QA captures
+frontend/.screenshots/
+
+# Vercel
+.vercel/
+
+# Local challenge material (not part of the deliverable)
+/01_Complete_Project_Requirements.md
+/02_AI_Agent_Development_Strategy.md
