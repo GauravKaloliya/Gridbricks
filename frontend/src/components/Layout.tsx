@@ -157,24 +157,24 @@ export function Layout() {
       </div>
 
       <header className="border-b-2 border-ink bg-paper lg:sticky lg:top-0 lg:z-40">
-        <div className="mx-auto flex max-w-[1360px] flex-col gap-2 px-4 pb-2 pt-3 sm:gap-3 sm:px-8 sm:pb-3 sm:pt-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6 lg:px-12">
-          <div className="flex items-start justify-between gap-3 lg:contents">
+        <div className="mx-auto flex max-w-[1360px] flex-col gap-2 px-4 pb-2 pt-3 sm:gap-3 sm:px-8 sm:pb-3 sm:pt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-6 lg:px-12">
+          <div className="flex items-center justify-between gap-3 lg:contents">
             <NavLink
               to={{ pathname: "/", search }}
-              className="flex items-center gap-3 self-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal"
+              className="flex items-center gap-3 self-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal lg:col-start-1 lg:row-start-1 lg:justify-self-start"
             >
               <GridMark />
               <span className="flex items-baseline gap-3">
                 <span className="display text-[26px] leading-none tracking-[-0.035em]">
                   Gridbricks
                 </span>
-                <span className="hidden text-[9px] font-semibold uppercase tracking-[0.22em] text-ink-mute sm:inline">
+                <span className="hidden text-[9px] font-semibold uppercase tracking-[0.22em] text-ink-mute sm:inline lg:hidden xl:inline">
                   Wind forecast intelligence
                 </span>
               </span>
             </NavLink>
 
-            <div className="flex shrink-0 items-center gap-1.5 lg:order-3 lg:mb-0.5 lg:self-center">
+            <div className="flex shrink-0 items-center gap-1.5 lg:col-start-3 lg:row-start-1 lg:justify-self-end lg:self-center">
               <button
                 type="button"
                 className={UTILITY_CLASS}
@@ -208,7 +208,7 @@ export function Layout() {
           <nav
             aria-label="Primary"
             data-tour="primary-nav"
-            className="relative grid grid-cols-2 gap-x-6 border-t border-rule-soft after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:h-px after:bg-rule-soft after:content-[''] sm:flex sm:items-stretch sm:gap-0 sm:overflow-x-auto sm:border-t sm:pt-2 sm:after:hidden lg:order-2 lg:overflow-visible lg:border-t-0 lg:pt-0"
+            className="relative grid grid-cols-2 gap-x-6 border-t border-rule-soft after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:h-px after:bg-rule-soft after:content-[''] sm:flex sm:items-stretch sm:justify-center sm:gap-0 sm:overflow-x-auto sm:border-t sm:pt-2 sm:after:hidden lg:col-start-2 lg:row-start-1 lg:overflow-visible lg:border-t-0 lg:pt-0"
           >
             {navItems.map((item) => (
               <NavLink
