@@ -155,7 +155,7 @@ cd backend && .venv/bin/python -m pytest -q     # 78 passed
 cd frontend && npm test                          # 42 passed
 cd frontend && npm run test:e2e                  # 22 passing, 3 browsers + axe
 cd frontend && npm run build                     # tsc + vite build
-bash scripts/verify.sh                           # full local gate (~120 s)
+bash scripts/verify.sh                           # full local gate (~2–3 min)
 ```
 
 Mention that the E2E suite runs every functional flow in Chromium, Firefox and
@@ -179,8 +179,9 @@ Show FastAPI `/docs` and one response, e.g. `/api/forecast-revisions` for
   Heroku/Render configs are also prepared. Nothing was deployed; no public URL
   is claimed.
 - CI: `.github/workflows/ci.yml` defines four jobs, mirrored locally by
-  `scripts/verify.sh`; hosted results are reported from the actual run, not
-  assumed.
+  `scripts/verify.sh`; the hosted run on `main` passed all four. The first
+  hosted run caught a Linux-only argument-size bug in the smoke script, which
+  was fixed and re-run green.
 
 ### 8:50–9:00 — Close
 

@@ -23,7 +23,7 @@ alone.
 | Automated end-to-end tests | Implemented and passing | 22 passing Playwright results across 30 runs in Chromium, Firefox and WebKit: six functional flows plus 4 axe route checks (Chromium) |
 | Accessibility | Implemented and passing | axe critical/serious checks on all four routes; four real defects found and fixed (see below) |
 | Docker | Implemented, **built and executed** | Both images built; both healthchecks green; deterministic snapshot smoke on isolated ports; live Elexon fetch through the container; frontend, SPA routing and CORS verified |
-| CI workflow | Prepared; local equivalent **executed** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` ran the same gate locally; hosted CI is triggered by the initial push, result recorded below |
+| CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; the hosted run on `main` passed all four jobs |
 | Deployment configuration | Prepared, **not executed** | Vercel Services config for the full stack, split Vercel + Heroku/Render path, `frontend/vercel.json`, `render.yaml`; no public URL claimed |
 | Vercel serverless entrypoint | Implemented, tested, **validated locally** | `backend/app/vercel.py`; entrypoint test in the backend suite; `vercel dev --local` served `/health`, `/api/*`, `/docs` and SPA deep links |
 | README and docs | Implemented | README with required sections, API reference, verified API notes, deployment runbook, demo outline |
@@ -339,6 +339,26 @@ time; the earlier Python 3.11 run took 120 s with warm images.
 `--no-e2e` and `--no-docker` skip stages for faster loops. The gate mirrors
 the four jobs in `.github/workflows/ci.yml`.
 
+### Hosted CI
+
+The workflow runs on every push to `main`. The first hosted run
+(`40905624417`, commit `11975a9`) passed backend, frontend and Playwright and
+failed the container job: `scripts/smoke.sh` passed the full-month API
+response (several megabytes) as a command-line argument, which exceeds Linux's
+per-argument limit even though macOS accepted it. The script now pipes the
+JSON into Python on stdin. After the fix and an Actions major-version update,
+run `40906353001` (commit `6569904`) passed all four jobs:
+
+```text
+Backend tests                        success
+Frontend typecheck, tests and build  success
+Playwright end-to-end                success
+Container build and smoke            success
+```
+
+This is the kind of platform difference only a hosted run exposes; the local
+gate could not reproduce it.
+
 ### Vercel Services validation (local)
 
 The repository root contains a single `vercel.json` that deploys both halves
@@ -377,7 +397,7 @@ used and no deployment was performed.
 | **D** — React UI | Core use cases and explicit states | **PASS** — 42 unit tests + 22 E2E passes across Chromium, Firefox and WebKit + browser walkthroughs at 320–1440 px |
 | **E** — Docker | Containers build, start and serve real data | **PASS** — deterministic snapshot smoke: both healthchecks, 744/744 API, SPA deep link, CORS, request id; plus earlier live-fetch and `$PORT` checks |
 | **F** — Deployment | Public URL verified | **NOT PERFORMED** — Vercel Services and split-deploy configs prepared and locally exercised with `vercel dev --local`; no credentials used and no URL claimed |
-| **G** — CI | Workflow defined and mirrored locally | **LOCAL GATE PASS; HOSTED CI PENDING FIRST PUSH** — full `scripts/verify.sh` executed in 175 s; `.github/workflows/ci.yml` runs on push to `main` |
+| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 175 s; GitHub Actions run `40906353001` passed all four jobs |
 
 ## Requirement traceability
 
@@ -400,7 +420,7 @@ used and no deployment was performed.
 | TEST-01 | At least one E2E path | Verified | 22 passing Playwright results across three browsers: tooltip stability, date selection to metrics, explorer revisions, deep-linked audit, CSV export, failure/retry, axe |
 | OPS-01 | Docker | **Verified** | Snapshot compose smoke with both healthchecks, 744/744 API, SPA routing, CORS, request id; earlier live-fetch and `$PORT` checks |
 | OPS-02 | Vercel/Heroku deployment | **Config prepared and locally validated, not deployed** | One-project Vercel Services config exercised with `vercel dev --local`; split Vercel + Heroku/Render path documented; no URL claimed |
-| OPS-03 | CI workflow | **Local gate pass, hosted run pending first push** | `.github/workflows/ci.yml`; `scripts/verify.sh` mirrors it and passed in 175 s |
+| OPS-03 | CI workflow | **Verified locally and on GitHub** | `.github/workflows/ci.yml`; run `40906353001` passed backend, frontend, Playwright and container smoke |
 | DOC-01/02 | README + AI disclosure | Implemented | `README.md` includes all required sections |
 | DEL-01 | Public repository | **Published** | `main` pushed to `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Manual, pending** | Require recording and human submission |
@@ -415,9 +435,9 @@ used and no deployment was performed.
   Firefox and WebKit, and responsive layout was checked at 320, 390, 606, 768
   and 1440 px in Chromium. No physical mobile device or screen-reader session
   was run; axe remains Chromium-only.
-- **Hosted CI is pending the first push.** The full local gate
-  (`scripts/verify.sh`) is green; GitHub Actions runs on push to `main` and
-  the result will be recorded once observed.
+- **Hosted CI is green.** Run `40906353001` passed all four jobs after the
+  Linux-only smoke-script fix; the local gate remains the faster path for
+  iteration.
 - **The container smoke needs local Docker and two free host ports.** It
   defaults to 8000/8080 and accepts `API_PORT`/`WEB_PORT` overrides; it tears
   the stack down on exit.

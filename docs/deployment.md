@@ -22,7 +22,8 @@ bash scripts/verify.sh
 
 The GitHub Actions workflow runs the same checks: backend pytest, frontend
 typecheck + Vitest + production build + bundle budget, Playwright across
-Chromium/Firefox/WebKit with axe on Chromium, and the container smoke.
+Chromium/Firefox/WebKit with axe on Chromium, and the container smoke. The
+hosted run on `main` has passed all four jobs.
 
 ---
 

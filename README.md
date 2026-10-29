@@ -486,9 +486,12 @@ What the suites cover:
   the three-browser Playwright suite, and a container build + Compose smoke.
   The E2E and container jobs depend on the first two.
 
-The local gate and Docker smoke were executed on this machine; hosted CI is
-visible in the badge above once the first push runs. The evidence ledger,
-including exact outputs and known gaps, is
+The local gate and Docker smoke were executed on this machine, and the hosted
+GitHub Actions run passed all four jobs. The first hosted run also caught a
+Linux-only bug in the smoke script that the local gate could not reproduce —
+the full-month JSON was too large to pass as a command-line argument — which
+was fixed before the green run. The evidence ledger, including exact outputs
+and known gaps, is
 [`docs/implementation-status.md`](docs/implementation-status.md).
 
 ---
