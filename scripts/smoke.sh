@@ -56,24 +56,24 @@ echo "==> Starting stack (snapshot mode, deterministic real data)"
 DATA_MODE=snapshot "${COMPOSE[@]}" up -d --wait --wait-timeout 180
 
 echo "==> Asserting backend health"
-health="$(curl -fsS --retry 5 --retry-delay 2 "$API/health")"
-python3 - "$health" <<'PY'
+curl -fsS --retry 5 --retry-delay 2 "$API/health" | python3 -c '
 import json
 import sys
 
-body = json.loads(sys.argv[1])
+body = json.load(sys.stdin)
 assert body["status"] == "ok", body
 assert body["data_mode"] == "snapshot", body
-PY
+'
 pass "health endpoint reports ok in snapshot mode"
 
 echo "==> Asserting full-month analytics use the real snapshot"
-payload="$(curl -fsS "$API/api/accuracy?start_date=2026-01-01&end_date=2026-01-31")"
-python3 - "$payload" <<'PY'
+# Pipe the response: the full-month payload exceeds Linux's per-argument limit.
+curl -fsS "$API/api/accuracy?start_date=2026-01-01&end_date=2026-01-31" \
+  | python3 -c '
 import json
 import sys
 
-body = json.loads(sys.argv[1])
+body = json.load(sys.stdin)
 counts = body["counts"]
 metrics = body["metrics"]
 decision = body["decision_support"]
@@ -88,7 +88,7 @@ assert decision["p90_shortfall"] is not None, decision
 assert sum(b["matched_count"] for b in decision["lead_time_buckets"]) == 744
 assert body["freshness"]["data_state"] == "snapshot", body["freshness"]
 assert len(body["intervals"]) == 744
-PY
+'
 pass "accuracy API returns 744 matched hours from the stored Elexon snapshot"
 
 echo "==> Asserting frontend shell, deep links, and container health"
