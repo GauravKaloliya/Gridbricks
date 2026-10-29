@@ -16,15 +16,15 @@ alone.
 | Cutoff-aware forecast selection | Implemented, unit-tested | Exact-cutoff inclusive, post-cutoff rejected, duplicates and no-eligible cases |
 | Matching and metrics | Implemented, unit-tested | Hourly forecast vs mean of two half-hours; MAE/RMSE/MBE known-value tests; no-data nulls |
 | Decision-support analytics | Implemented, tested, verified | P90/P95 error, P90 shortfall, underforecast share, lead-time buckets; full-month values recorded below |
-| Backend API | Implemented, tested, live-verified | 80 pytest tests; `/health`, `/api/meta`, `/api/accuracy`, `/api/forecasts`, `/api/actuals`, `/api/forecast-revisions`, plus the HTML landing page at `/` |
+| Backend API | Implemented, tested, live-verified | 80 pytest tests; `/health`, `/api/meta`, `/api/accuracy`, `/api/forecasts`, `/api/actuals`, `/api/forecast-revisions`, plus the complete HTML API reference at `/` and `/docs` |
 | Observability | Implemented, tested | `X-Request-ID` accept/generate/expose, request id in error envelopes, structured access logs, 500 envelope tests |
 | React UI | Implemented, built, browser-verified | Four pages plus hourly/half-hourly data tabs, decision-support panel and CSV export; 47 Vitest tests across 11 files; route-level code splitting |
 | Themes | Implemented, tested, browser-verified | Paper, Light and Dark; first-visit chooser with live previews, header control, `localStorage` persistence, cross-tab sync, pre-paint restore, theme-aware chart palettes |
 | Site guide | Implemented, tested, browser-verified | 19 steps across all routes; frozen page, four scrim panels, spotlight, five card placements, keyboard control, focus trap and restore |
-| API landing page | Implemented, tested, browser-verified | `GET /` renders window, mode, cutoff and quickstart from live settings; strict CSP, no JavaScript, light/dark axe clean, excluded from OpenAPI |
+| API reference page | Implemented, tested, browser-verified | `GET /` and `GET /docs` return the same complete HTML reference: conventions, all six endpoints, every schema field and enum, all error codes and a quickstart. Rendered from live settings; strict CSP, no JavaScript, Swagger disabled, `/redoc` retained, excluded from OpenAPI |
 | Loading/error/empty/partial/fallback states | Implemented, tested, browser-verified | Error state observed with backend stopped; retry recovered when restarted |
 | Automated end-to-end tests | Implemented and passing | 44 passing Playwright results across 66 runs in Chromium, Firefox and WebKit: six analysis flows, five theme/guide flows and 7 axe checks (Chromium; four additional guide-geometry cases also Chromium-only) |
-| Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below). The backend landing page was separately audited in Paper and Dark at 1440×1000 and 390×844: zero critical or serious findings, zero horizontal overflow |
+| Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below). The API reference page was separately audited in Light and Dark at 1440×900 and 390×844: zero critical or serious findings, zero horizontal overflow, no clipped examples, no broken anchors or duplicate ids |
 | Docker | Implemented, **built and executed** | Both images built; both healthchecks green; deterministic snapshot smoke on isolated ports; live Elexon fetch through the container; frontend, SPA routing and CORS verified |
 | CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; run `40931090240` on `a75e631` passed all four jobs, including the theme/guide suite |
 | Deployment configuration | Prepared, **not executed** | Vercel Services config for the full stack, split Vercel + Heroku/Render path, `frontend/vercel.json`, `render.yaml`; no public URL claimed |
@@ -46,7 +46,7 @@ cd backend && .venv/bin/python -m pytest -q
 Result:
 
 ```text
-80 passed in 1.74s
+80 passed in 1.73s
 ```
 
 The suite covers WIND filtering, timestamp normalisation, exact-cutoff
@@ -58,9 +58,10 @@ upstream retries/timeouts, API schemas and status codes, snapshot validation,
 cache reuse and fallback, malformed upstream records, cache TTL expiry,
 oversized ranges, standardised 404/405 error envelopes, request-id
 generation/preservation/rejection, CORS header exposure, and unexpected-error
-envelopes. Two tests cover the root landing page: it returns `text/html` with
-the brand, `/docs` link, `/api/accuracy` path and January dates, it sets the
-strict CSP header, and `/` stays out of the OpenAPI paths. The Vercel entrypoint
+envelopes. Two tests cover the HTML reference: `/` and `/docs` return
+byte-identical `text/html`, both set the strict CSP header, the page contains
+the brand, every route, key response fields and error codes, no `<script>` or
+Swagger UI appears, and neither HTML route is in the OpenAPI paths. The Vercel entrypoint
 has its own subprocess test: it unsets
 `DATA_MODE`/`CACHE_DIR`, imports `app.vercel:app` and asserts snapshot mode,
 the `/tmp` cache directory and a 200 `/health`. A dedicated snapshot-invariant
@@ -508,7 +509,7 @@ used and no deployment was performed.
 | METRIC-01 | MAE/RMSE/MBE, no-data handling | Tested | Known-value and empty-input tests |
 | METRIC-02 | Decision-support measures | Implemented + verified | P90/P95, P90 shortfall, underforecast share, lead-time buckets from matched hours |
 | A11Y-01 | Accessible interface | Verified | axe critical/serious clean on four routes, the theme chooser, the open guide and the dark overview; four defects found and fixed |
-| API-01 | Documented typed API | Verified | OpenAPI at `/docs`; `docs/api.md`; API tests; request-id contract documented and tested |
+| API-01 | Documented typed API | Verified | Complete HTML reference at `/` and `/docs`; OpenAPI at `/openapi.json`; `docs/api.md`; API tests; request-id contract documented and tested |
 | UI-01/02 | Views and all states | Verified in browser + E2E | Overview, Explorer, Accuracy, Data (hourly + half-hourly); loading/error/partial/fallback; URL-addressable selection and deep links; three themes and a 19-step guide |
 | TEST-01 | At least one E2E path | Verified | 44 passing Playwright results across three browsers: tooltip stability, date selection to metrics, explorer revisions, deep-linked audit, CSV export, failure/retry, axe, theme persistence and preview, guide navigation, freeze and geometry |
 | OPS-01 | Docker | **Verified** | Snapshot compose smoke with both healthchecks, 744/744 API, SPA routing, CORS, request id; earlier live-fetch and `$PORT` checks |

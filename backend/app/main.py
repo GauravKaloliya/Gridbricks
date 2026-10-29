@@ -22,6 +22,7 @@ settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
+    docs_url=None,
     description=(
         "Wind-generation forecast analytics for day-ahead procurement. "
         "Elexon FUELHH actuals and WINDFOR forecasts, January 2026. "
@@ -119,8 +120,9 @@ async def handle_unexpected_error(request: Request, exc: Exception) -> JSONRespo
     )
 
 
-@app.get("/", tags=["system"], include_in_schema=False, response_class=HTMLResponse)
-async def root() -> HTMLResponse:
+@app.get("/", include_in_schema=False, response_class=HTMLResponse)
+@app.get("/docs", include_in_schema=False, response_class=HTMLResponse)
+async def api_reference() -> HTMLResponse:
     return HTMLResponse(
         render_landing(settings, app.version),
         headers={

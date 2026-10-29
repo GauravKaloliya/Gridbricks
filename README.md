@@ -64,7 +64,7 @@ missing value, and failed request is visible and traceable.
 | **Storage** | No database. A 2,511,322-byte provenance-stamped snapshot plus an optional 7-day disk cache. |
 | **Experience** | Three themes (Paper, Light, Dark) with a first-visit chooser and live preview; a 19-step site guide that freezes the page and spotlights each control. |
 | **Result** | 744 / 744 intervals matched; MAE **2,122.81 MW**, RMSE **2,616.69 MW**, MBE **+1,840.30 MW**. |
-| **Verification** | 80 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, HTML landing page axe clean in light and dark, Docker smoke, hosted CI green on pushed commit `a75e631` (78 backend tests at that point). |
+| **Verification** | 80 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, complete HTML API reference axe clean in Light and Dark, Docker smoke, hosted CI green on pushed commit `a75e631` (78 backend tests at that point). |
 | **Deployment** | Vercel Services config committed and exercised locally; Docker/Render/Heroku paths documented. **Not publicly deployed.** |
 | **License** | MIT. Data attribution: public Elexon BMRS data. |
 
@@ -72,14 +72,14 @@ missing value, and failed request is visible and traceable.
 
 | Area | Lines | Detail |
 | --- | ---: | --- |
-| Python application | 2,746 | 4 domain modules, 3 data modules, 5 core modules, API, services, schemas, landing page, 2 entrypoints |
-| Python tests | 1,258 | 80 tests across 11 files |
+| Python application | 3,692 | 4 domain modules, 3 data modules, 5 core modules, API, services, schemas, API reference page, 2 entrypoints |
+| Python tests | 1,290 | 80 tests across 11 files |
 | Frontend TypeScript/TSX | 5,466 | 5 pages, 22 components, 3 providers, query hooks, typed API client, formatting, CSV, theme palettes, guide steps |
 | Frontend tests | 1,012 | 47 tests across 11 files |
 | Stylesheet | 481 | Tailwind layers, editorial typography, responsive table-to-card rules, theme tokens, guide spotlight |
 | E2E specs | 642 | 6 analysis flows, 9 theme and guide flows, 7 axe checks |
-| Documentation | 4,070 | This README plus 7 documents in `docs/` |
-| **Code + tests** | **11,605** | Excludes documentation, lockfiles, fonts, and the data snapshot |
+| Documentation | 4,093 | This README plus 7 documents in `docs/` |
+| **Code + tests** | **12,583** | Excludes documentation, lockfiles, fonts, and the data snapshot |
 
 ---
 
@@ -352,7 +352,7 @@ docker compose up --build
 ```
 
 Open **<http://localhost:8080>**. The API is at **<http://localhost:8000>**
-(`/health`, `/docs`).
+(`/health`, `/docs`, `/openapi.json`).
 
 For a deterministic demo backed by the bundled real Elexon snapshot:
 
@@ -411,7 +411,7 @@ provenance block. It never fills gaps.
 | `bash scripts/verify.sh --no-docker` | Same gate without rebuilding containers | Skips Compose |
 | `bash scripts/verify.sh --no-e2e` | Skips Playwright for a fast loop | Skips E2E |
 | `bash scripts/smoke.sh` | Builds and asserts the Compose stack in snapshot mode | Passed |
-| `cd backend && python -m pytest -q` | Backend suite | **80 passed in 1.74 s** |
+| `cd backend && python -m pytest -q` | Backend suite | **80 passed in 1.73 s** |
 | `cd frontend && npx tsc --noEmit` | Strict typecheck | Clean |
 | `cd frontend && npx vitest run` | Frontend unit suite | **47 passed** |
 | `cd frontend && npm run build` | Typecheck + production build | **3.30 s** |
@@ -1323,21 +1323,24 @@ them as decision support and the disclaimer repeats the scope.
 
 ## API reference
 
-Local base URL: `http://localhost:8000`. Interactive OpenAPI docs: `/docs`.
-OpenAPI schema: `/openapi.json`. Full examples:
-[`docs/api.md`](docs/api.md).
+Local base URL: `http://localhost:8000`. The complete HTML reference is served
+at both `/` and `/docs` (same page). OpenAPI schema: `/openapi.json`; ReDoc:
+`/redoc`. Full examples: [`docs/api.md`](docs/api.md).
 
-The bare host (`/`) serves a dependency-free HTML landing page rendered from
-the running settings: effective window, data mode, cutoff, a copy-ready `curl`
-quickstart and links to `/docs`, `/redoc`, `/health` and `/openapi.json`. It
-uses no JavaScript, honours `prefers-color-scheme`, and is excluded from the
-OpenAPI schema.
+The reference page is dependency-free and rendered from the running settings:
+effective window, data mode, cutoff and maximum range. It documents every
+route, query parameter, response field, enum value and error code, with
+complete example responses and a copy-ready `curl` quickstart. Swagger UI is
+disabled. The page uses no JavaScript, honours `prefers-color-scheme`, is
+keyboard-navigable with wrapped examples and sticky mobile table columns, and
+is excluded from the OpenAPI schema. Both `/` and `/docs` return byte-identical
+HTML.
 
 ### Endpoints
 
 | Method | Endpoint | Purpose | Main fields |
 | --- | --- | --- | --- |
-| `GET` | `/` | HTML landing and quickstart page (not in OpenAPI) | Window, mode, cutoff, endpoint links |
+| `GET` | `/` and `/docs` | Complete HTML API reference (same page, not in OpenAPI) | Conventions, all endpoints and fields, enums, errors, quickstart |
 | `GET` | `/health` | Liveness, version, data mode | `status`, `version`, `data_mode` |
 | `GET` | `/api/meta` | Period, resolution, cutoff rule, attribution, disclaimer | `cutoff`, `source_attribution`, `disclaimer` |
 | `GET` | `/api/accuracy?start_date=…&end_date=…` | Metrics, decision support, counts, interval rows | `counts`, `metrics`, `decision_support`, `intervals`, `freshness` |
@@ -1508,7 +1511,7 @@ Notes:
 
 | Measurement | Observed |
 | --- | ---: |
-| Backend tests | 1.74 s for 80 tests |
+| Backend tests | 1.73 s for 80 tests |
 | Frontend typecheck | clean |
 | Frontend production build | 3.30 s |
 | Bundle budget | 384.36 kB decimal / 375.35 KiB largest chunk (< 500 KiB) |
@@ -1542,7 +1545,7 @@ into Python on stdin.
 
 | Layer | Result | Command | Scope |
 | --- | --- | --- | --- |
-| Backend | **80 passed** | `cd backend && python -m pytest -q` | Domain, data, API, landing page, observability, robustness, snapshot invariants |
+| Backend | **80 passed** | `cd backend && python -m pytest -q` | Domain, data, API, API reference page, observability, robustness, snapshot invariants |
 | Frontend unit | **47 passed** | `cd frontend && npx vitest run` | Formatting, API client, state components, tables, CSV, overview, theme and guide state |
 | Typecheck | **clean** | `cd frontend && npx tsc --noEmit` | Strict TypeScript |
 | End-to-end | **44 passed, 22 skipped, 66 runs** | `cd frontend && npm run test:e2e` | 6 analysis + 9 theme/guide flows × 3 browsers; 7 axe checks on Chromium |
@@ -1651,9 +1654,10 @@ The complete ledger, including exact outputs and known gaps, is
   including the theme and guide suite.
 - Theme and guide covered by 47 unit tests and 44 E2E passes across three
   browsers; guide geometry audited at five viewports, all passing.
-- Backend landing page rendered from live settings and audited with axe at
-  1440×1000 and 390×844 in Paper and Dark: zero critical or serious findings,
-  zero horizontal overflow. CSP blocks injected scripts by design.
+- Complete API reference rendered at `/` and `/docs` from live settings,
+  audited with axe at 1440×900 and 390×844 in Light and Dark: zero critical or
+  serious findings, zero horizontal overflow, no clipped examples, no broken
+  anchors or duplicate ids. CSP blocks injected scripts by design.
 - Docker smoke green: 744/744 API rows, both healthchecks, SPA deep link, CORS,
   request IDs.
 - Vercel config exercised with `vercel dev --local`; **not deployed**.
@@ -1671,7 +1675,7 @@ The complete ledger, including exact outputs and known gaps, is
 │   │   ├── core/                      # settings, logging, request ids, errors, time utils
 │   │   ├── data/                      # Elexon client, repository, snapshot store
 │   │   ├── domain/                    # cutoff, selection, matching, metrics
-│   │   ├── landing.py                 # dependency-free HTML page served at /
+│   │   ├── landing.py                 # complete HTML API reference at / and /docs
 │   │   ├── schemas/models.py          # frozen Pydantic contracts
 │   │   ├── services/analysis.py       # range resolution and orchestration
 │   │   ├── main.py                    # app, middleware order, error handlers
@@ -1779,7 +1783,7 @@ docker compose up --build
 ```
 
 - Frontend: **<http://localhost:8080>**
-- Backend: **<http://localhost:8000>** (`/health`, `/docs`)
+- Backend: **<http://localhost:8000>** (`/health`, `/docs`, `/openapi.json`)
 - Host ports are configurable: `API_PORT=8030 WEB_PORT=8090 docker compose up`.
 - The backend binds `$PORT` when the platform provides one, falling back to
   `8000`; the same image deploys unchanged.
@@ -1840,7 +1844,7 @@ exercised; **Local only** = configured and exercised locally, not deployed;
 | METRIC-01 | MAE/RMSE/MBE, no-data handling | **Verified** | Known-value and empty-input tests |
 | METRIC-02 | Decision-support measures | **Verified** | P90/P95, P90 shortfall, underforecast share, lead-time buckets |
 | A11Y-01 | Accessible interface | **Verified** | axe critical/serious clean on four routes, the theme chooser, the guide overlay, and the dark theme |
-| API-01 | Documented typed API | **Verified** | OpenAPI at `/docs`; `docs/api.md`; contract and request-id tests |
+| API-01 | Documented typed API | **Verified** | Complete HTML reference at `/` and `/docs`; OpenAPI at `/openapi.json`; `docs/api.md`; contract and request-id tests |
 | UI-01/02 | Views and all states | **Verified** | Four routes; theme chooser with three themes; 19-step site guide; loading/error/partial/fallback; URL-addressable selection |
 | TEST-01 | At least one E2E path | **Verified** | 44 passing Playwright results across three browsers |
 | OPS-01 | Docker | **Verified** | Snapshot smoke with both healthchecks, 744/744 API, SPA routing, CORS |

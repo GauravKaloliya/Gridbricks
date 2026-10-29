@@ -2,11 +2,14 @@
 
 Base URL (local): `http://localhost:8000`
 
-Interactive OpenAPI documentation: `/docs` · OpenAPI schema: `/openapi.json`
+HTML reference: `/` and `/docs` (same page) · OpenAPI schema: `/openapi.json` ·
+ReDoc: `/redoc`
 
-The bare host serves a self-contained HTML landing page at `/` that documents
-the effective analysis window, data mode, cutoff rule and every route. It is
-not part of the OpenAPI schema; see `GET /` below.
+`/` and `/docs` serve one self-contained HTML reference rendered from the
+running settings. It covers every route, query parameter, response field,
+enum value, error code and example, plus conventions and a copy-ready
+quickstart. Swagger UI is disabled; the page uses no JavaScript and is not part
+of the OpenAPI schema. See `GET /` below.
 
 All timestamps are ISO-8601 UTC with a `Z` suffix. Generation values are in
 **MW**. Delivery dates are inclusive and must fall within the configured
@@ -48,18 +51,33 @@ because the bundled snapshot is real Elexon data.
 
 ---
 
-## `GET /`
+## `GET /` and `GET /docs`
 
-Human-facing HTML landing page, served by the API process itself. It renders
-the effective analysis window, resolution, decision cutoff, data mode and
-version from the running settings, plus a quickstart `curl` block and links to
-`/docs`, `/redoc`, `/health` and `/openapi.json`.
+Both routes return the same complete HTML API reference, byte for byte. It is
+served by the API process itself and rendered from the running settings:
+effective analysis window, data mode, decision cutoff, maximum range and
+version. The page contains:
+
+- conventions: base URL, methods, authentication, content types, date window,
+  resolutions, units, timestamp format and request correlation;
+- a summary table and a full reference block for each of the six JSON
+  endpoints, with query parameters, response fields, statuses and a complete
+  example response;
+- object references for every schema, including all enum values;
+- the error envelope, every error code and the fallback and missing-data rules;
+- a copy-ready `curl` quickstart and links to `/redoc`, `/health` and
+  `/openapi.json`.
+
+Swagger UI is not mounted (`docs_url=None`). The HTML page is dependency-free
+and served from both `/` and `/docs`, so either URL shows the full reference.
 
 - `Content-Type: text/html; charset=utf-8`
 - No JavaScript and no external assets; a strict
   `Content-Security-Policy: default-src 'none'` allows inline styles and the
   inline SVG mark only.
-- Honours `prefers-color-scheme` and is keyboard-navigable.
+- Honours `prefers-color-scheme` and is keyboard-navigable. On narrow screens
+  tables scroll horizontally with a sticky first column, and example payloads
+  wrap instead of clipping.
 - Excluded from the OpenAPI schema (`include_in_schema=False`), so generated
   clients only see the JSON API.
 - Cacheable for five minutes (`Cache-Control: public, max-age=300`).

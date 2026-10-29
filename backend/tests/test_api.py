@@ -29,21 +29,53 @@ def test_health(client):
     assert body["version"] == "0.1.0"
 
 
-def test_root_serves_html_landing_page(client):
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
-    html = response.text
+def test_root_and_docs_serve_the_same_html_reference(client):
+    root = client.get("/")
+    docs = client.get("/docs")
+    for response in (root, docs):
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/html")
+        assert "default-src 'none'" in response.headers["content-security-policy"]
+    assert root.text == docs.text
+    html = root.text
     assert "Gridbricks Wind Forecast Analytics" in html
-    assert 'href="/docs"' in html
-    assert "/api/accuracy" in html
-    assert "2026-01-01" in html
-    assert "default-src 'none'" in response.headers["content-security-policy"]
+    assert "<script" not in html.lower()
+    for route in (
+        "/health",
+        "/api/meta",
+        "/api/accuracy",
+        "/api/forecasts",
+        "/api/actuals",
+        "/api/forecast-revisions",
+        "/openapi.json",
+        "/redoc",
+    ):
+        assert route in html
+    for field in (
+        "candidate_count",
+        "coverage_pct",
+        "decision_support",
+        "p90_shortfall",
+        "underforecast_share_pct",
+        "lead_time_buckets",
+        "actual_periods_used",
+        "eligible_forecast_count",
+        "lead_time_hours",
+        "settlement_period",
+        "selected_publish_time",
+        "cache_age_seconds",
+        "snapshot_fallback",
+        "OUT_OF_ANALYSIS_PERIOD",
+        "UPSTREAM_TIMEOUT",
+    ):
+        assert field in html
+    assert "swagger-ui" not in html.lower()
 
 
-def test_root_is_not_in_openapi(client):
+def test_html_routes_are_not_in_openapi(client):
     schema = client.get("/openapi.json").json()
     assert "/" not in schema["paths"]
+    assert "/docs" not in schema["paths"]
     assert "/api/meta" in schema["paths"]
 
 
