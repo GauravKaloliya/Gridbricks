@@ -14,6 +14,7 @@ export function CsvExportButton({
     <button
       type="button"
       className="btn-ghost shrink-0"
+      data-tour="data-export"
       disabled={intervals.length === 0}
       onClick={() =>
         downloadCsv(

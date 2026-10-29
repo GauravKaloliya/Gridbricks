@@ -42,7 +42,7 @@ export function DateRangeControl() {
     ].join(" ");
 
   return (
-    <div className="border-t-2 border-ink pt-4">
+    <div className="border-t-2 border-ink pt-4" data-tour="date-range">
       <div className="flex items-center justify-between gap-3">
         <p className="kicker flex items-center gap-2 text-ink">
           <span aria-hidden="true" className="h-2 w-2 bg-signal" />

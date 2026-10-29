@@ -18,10 +18,12 @@ alone.
 | Decision-support analytics | Implemented, tested, verified | P90/P95 error, P90 shortfall, underforecast share, lead-time buckets; full-month values recorded below |
 | Backend API | Implemented, tested, live-verified | 78 pytest tests; `/health`, `/api/meta`, `/api/accuracy`, `/api/forecasts`, `/api/actuals`, `/api/forecast-revisions` |
 | Observability | Implemented, tested | `X-Request-ID` accept/generate/expose, request id in error envelopes, structured access logs, 500 envelope tests |
-| React UI | Implemented, built, browser-verified | Four pages plus hourly/half-hourly data tabs, decision-support panel and CSV export; 42 Vitest tests; route-level code splitting |
+| React UI | Implemented, built, browser-verified | Four pages plus hourly/half-hourly data tabs, decision-support panel and CSV export; 47 Vitest tests across 11 files; route-level code splitting |
+| Themes | Implemented, tested, browser-verified | Paper, Light and Dark; first-visit chooser with live previews, header control, `localStorage` persistence, cross-tab sync, pre-paint restore, theme-aware chart palettes |
+| Site guide | Implemented, tested, browser-verified | 19 steps across all routes; frozen page, four scrim panels, spotlight, five card placements, keyboard control, focus trap and restore |
 | Loading/error/empty/partial/fallback states | Implemented, tested, browser-verified | Error state observed with backend stopped; retry recovered when restarted |
-| Automated end-to-end tests | Implemented and passing | 22 passing Playwright results across 30 runs in Chromium, Firefox and WebKit: six functional flows plus 4 axe route checks (Chromium) |
-| Accessibility | Implemented and passing | axe critical/serious checks on all four routes; four real defects found and fixed (see below) |
+| Automated end-to-end tests | Implemented and passing | 44 passing Playwright results across 66 runs in Chromium, Firefox and WebKit: six analysis flows, five theme/guide flows and 7 axe checks (Chromium; four additional guide-geometry cases also Chromium-only) |
+| Accessibility | Implemented and passing | axe critical/serious checks on four routes plus the theme chooser, the open guide and the dark overview; four real defects found and fixed (see below) |
 | Docker | Implemented, **built and executed** | Both images built; both healthchecks green; deterministic snapshot smoke on isolated ports; live Elexon fetch through the container; frontend, SPA routing and CORS verified |
 | CI workflow | Implemented and **executed on GitHub** | `.github/workflows/ci.yml` defines four jobs; `scripts/verify.sh` mirrors them locally; the hosted run on `main` passed all four jobs |
 | Deployment configuration | Prepared, **not executed** | Vercel Services config for the full stack, split Vercel + Heroku/Render path, `frontend/vercel.json`, `render.yaml`; no public URL claimed |
@@ -74,28 +76,31 @@ cd frontend && npm run build
 Result:
 
 ```text
-Test Files  9 passed (9)
-     Tests  42 passed (42)
+Test Files  11 passed (11)
+     Tests  47 passed (47)
+   Duration  2.66s
 ```
 
 ```text
 tsc --noEmit  ✓
-vite build    ✓ built in 9.33s
-dist/assets/index-*.css                 42.72 kB (gzip   8.53 kB)
-dist/assets/index-*.js                 288.77 kB (gzip  90.64 kB)
-dist/assets/DateAxisTick-*.js          384.34 kB (gzip 106.21 kB)  # Recharts
-dist/assets/OverviewPage-*.js           44.21 kB (gzip  11.63 kB)
-dist/assets/useAnalytics-*.js           21.14 kB (gzip   7.21 kB)
-dist/assets/AccuracyPage-*.js           15.09 kB (gzip   4.79 kB)
-dist/assets/DataPage-*.js               12.72 kB (gzip   3.56 kB)
-dist/assets/ForecastExplorerPage-*.js   10.16 kB (gzip   3.18 kB)
+vite build    ✓ built in 2.32s
+dist/assets/index-*.css                 53.24 kB (gzip  10.28 kB)
+dist/assets/index-*.js                 322.78 kB (gzip 100.56 kB)
+dist/assets/DateAxisTick-*.js          384.36 kB (gzip 106.21 kB)  # Recharts
+dist/assets/OverviewPage-*.js           44.29 kB (gzip  11.67 kB)
+dist/assets/useAnalytics-*.js           21.18 kB (gzip   7.24 kB)
+dist/assets/AccuracyPage-*.js           15.11 kB (gzip   4.79 kB)
+dist/assets/DataPage-*.js               12.81 kB (gzip   3.59 kB)
+dist/assets/ForecastExplorerPage-*.js   10.24 kB (gzip   3.21 kB)
 ```
 
 Pages are lazy-loaded at the route level. The local gate measures the largest
-emitted JS chunk (375.33 kB) against a 500 kB budget and fails the build above
+emitted JS chunk (375.35 KiB) against a 500 KiB budget and fails the build above
 it, so the previous single 758 kB bundle cannot return unnoticed. Recharts is
 isolated in a shared chunk that only chart pages request; the base entry is
-288.77 kB (90.64 kB gzip).
+322.78 kB (100.56 kB gzip) and carries the app shell, theme provider, chooser
+and guide overlay so those controls work on every route without a second
+request.
 
 ### End-to-end
 
@@ -108,29 +113,50 @@ cd frontend && npm run test:e2e
 Result:
 
 ```text
-Running 30 tests using 3 workers (Chromium, Firefox, WebKit)
+Running 66 tests using 1 worker (Chromium, Firefox, WebKit)
   ✓ / has no critical or serious accessibility violations          [chromium]
   ✓ /forecasts has no critical or serious accessibility violations [chromium]
   ✓ /accuracy has no critical or serious accessibility violations  [chromium]
   ✓ /data has no critical or serious accessibility violations      [chromium]
+  ✓ theme chooser has no critical or serious accessibility violations
+  ✓ site guide has no critical or serious accessibility violations
+  ✓ dark theme overview has no critical or serious accessibility violations
   ✓ chart tooltip tracks the pointer without animated drift
   ✓ selecting the full month updates metrics, chart, and downstream views
   ✓ forecast explorer shows the eligible version and excludes later revisions
   ✓ accuracy analysis shows metrics, definitions, and error chart
   ✓ data page switches between hourly intervals and half-hourly actuals
   ✓ an API failure is visible and retry recovers without substituted values
-    (6 functional flows × 3 browsers)
-  22 passed, 8 skipped (55.7s)
+  ✓ asks on the first visit, previews and saves a choice, then stays quiet
+  ✓ closing without choosing asks again on the next visit
+  ✓ arrow keys preview a theme and Escape restores the committed one
+  ✓ the header control reopens the chooser and applies a new theme
+  ✓ starts from the header and supports Continue, Back, Exit and Escape
+  ✓ freezes the page and keeps the card clear of the spotlight       [chromium]
+  ✓ keeps a medium section fully inside the spotlight                [chromium]
+  ✓ walks every page and finishes on the overview                    [chromium]
+  ✓ mobile layout: chooser and guide stay inside the viewport        [chromium]
+  22 skipped
+  44 passed (1.9m)
 ```
 
-The eight skips are the axe cases on Firefox and WebKit, which are deliberately
-Chromium-only; the four Chromium axe checks and all six functional flows run
-on every engine. The tooltip test moves the pointer across the chart and
-asserts that the tooltip's position does not change after the pointer stops,
-which fails if Recharts' 400 ms tooltip position animation is re-enabled. The
-accuracy flow now also follows a decision-support largest-miss link into
-`/forecasts?interval=…`, asserting the URL-driven selection, the interval
-heading and the revision-audit heading.
+The six analysis flows and five theme/guide flows run in all three engines.
+The 7 axe checks run in Chromium only, as do the four guide-geometry cases
+(freeze/card clearance, medium-section outline, the full 19-step tour, and the
+390 px mobile layout), so Firefox and WebKit each skip 11 tests. The tooltip
+test moves the pointer across the chart and asserts that the tooltip's position
+does not change after the pointer stops, which fails if Recharts' 400 ms
+tooltip position animation is re-enabled. The accuracy flow now also follows a
+decision-support largest-miss link into `/forecasts?interval=…`, asserting the
+URL-driven selection, the interval heading and the revision-audit heading.
+
+The guide tests assert behaviour rather than pixels: the freeze test confirms
+`#root` becomes `inert`, `html` and `body` lock scrolling, a 1,400 px wheel
+event does not move the page, and the step card and spotlight boxes never
+overlap; the geometry test confirms a medium section is outlined in full
+rather than cropped; the full tour steps through all 19 titles and progress
+labels, checks the route and target for each step, and ends on `/` with the
+query string intact and the overlay removed after Finish.
 
 Playwright starts the backend in snapshot mode on port 8001 and the Vite dev
 server on port 5174, so the suite is self-contained. It also caught real
@@ -143,9 +169,10 @@ the CSV download filename.
 
 ### Accessibility
 
-`e2e/accessibility.spec.ts` runs axe on all four routes and fails on any
-`critical` or `serious` violation. The runs found four genuine defects that
-manual review had missed:
+`e2e/accessibility.spec.ts` runs axe on all four routes, the first-visit theme
+chooser, the open site guide and the overview in the dark theme — seven checks —
+and fails on any `critical` or `serious` violation. The route runs found four
+genuine defects that manual review had missed:
 
 1. **Colour contrast** — 9 px navigation numerals at 60% ink (2.37:1), the
    active numeral in the base signal red (4.4:1), and forecast-version values
@@ -163,8 +190,52 @@ manual review had missed:
    text becomes the accessible name, and the E2E locator was rewritten to
    target the href rather than the accessible name.
 
-The final run is the 4 axe tests above: all pass in Chromium. The functional
+The final run is the 7 axe tests above: all pass in Chromium. The functional
 flows also pass in Firefox and WebKit; real screen readers were not tested.
+
+### Theme and site guide verification
+
+Both features are covered by unit tests and Playwright flows, and both are
+represented in `docs/screenshots` from the running app at 1440 × 1000
+(`theme-chooser.png`, `site-guide.png`).
+
+**Theme chooser.** `ThemeContext.test.tsx` covers the first-visit prompt,
+persistence and the storage key; `theme-guide.spec.ts` covers the rest in a
+real browser:
+
+- A first visit with no stored key opens the chooser; selecting a card
+  previews it immediately; Continue stores the choice, closes the dialog, and
+  a reload applies the theme with the dialog absent.
+- Closing without choosing leaves storage empty, so the next visit asks again.
+- Arrow keys move the radio selection and preview; Escape restores the
+  previously committed theme.
+- For a returning visitor the header control reopens the chooser and the new
+  theme is applied and stored.
+- The pre-paint script in `index.html` applies the stored theme before React
+  mounts, so a reload does not flash the wrong palette; a `storage` listener
+  keeps other tabs in sync.
+
+**Site guide.** The tour is 19 steps in `src/lib/guide.ts`. The tests confirm
+the card sequence, Back/Continue/Exit/Escape, `#root` inert, `html`/`body`
+scroll lock, a 1,400 px wheel event not moving the page, card and spotlight
+boxes never overlapping, the route changing with each step, and Finish
+returning to `/` with the query string preserved.
+
+**Guide geometry.** A target gets the full outline whenever a step card of at
+least 240 px can be placed below, above, right or left of it. Only when no such
+placement exists is the spotlight capped, and the cap is derived from the
+target's real top so the visible portion stays inside the hole; a 56 px fade
+replaces a hard bottom edge, and the card is still kept out of the hole. The
+E2E suite asserts the full-outline case for a medium section at 1440 × 1000
+and the mobile placement at 390 × 844.
+
+A separate one-off Playwright audit stepped through all 19 steps at
+1440 × 1000, 1512 × 860, 1280 × 720, 390 × 844 and 320 × 568. At every step and
+viewport it asserted no horizontal page overflow, the card fully inside the
+viewport, the spotlight horizontally inside the viewport, and no card/spotlight
+overlap; all five runs passed (5 passed, 1.4 m). The audit script was a
+temporary file and is not part of the committed suite, so automated regression
+coverage remains the two E2E viewports.
 
 ### Live data and API
 
@@ -322,19 +393,21 @@ API_PORT=8030 WEB_PORT=8090 bash scripts/verify.sh
 Result, in one invocation:
 
 ```text
-==> Backend: pytest                         78 passed in 1.73s
+==> Backend: pytest                         78 passed in 1.65s
 ==> Frontend: typecheck                     clean
-==> Frontend: unit tests                    42 passed (9 files)
-==> Frontend: production build              built in 3.35s
-==> Frontend: bundle budget                 PASS  largest 375.33 kB (< 500 kB)
-==> Playwright: Chromium, Firefox, WebKit   22 passed, 8 skipped (1.1m)
+==> Frontend: unit tests                    47 passed (11 files)
+==> Frontend: production build              built in 2.32s
+==> Frontend: bundle budget                 PASS  largest 375.35 KiB (< 500 KiB)
+==> Playwright: Chromium, Firefox, WebKit   44 passed, 22 skipped (1.9m)
 ==> Docker: compose configuration           valid
 ==> Docker: container smoke                 passed (both healthy, 744/744)
-Gate passed in 175s.
+Gate passed in 161s.
 ```
 
-The 175 s includes pulling the new `python:3.12-slim` base for the first
-time; the earlier Python 3.11 run took 120 s with warm images.
+Playwright ran with one worker because the gate sets it explicitly, so 1.9 m
+is slower than the 3-worker standalone run. The Docker section reused cached
+layers on this rerun; the first cold run took 175 s because it pulled the
+`python:3.12-slim` base for the first time.
 
 `--no-e2e` and `--no-docker` skip stages for faster loops. The gate mirrors
 the four jobs in `.github/workflows/ci.yml`.
@@ -357,8 +430,14 @@ Playwright end-to-end                success
 Container build and smoke            success
 ```
 
-This is the kind of platform difference only a hosted run exposes; the local
-gate could not reproduce it.
+A later run, `40907058285` on commit `032f84c`, also passed all four jobs. Both
+hosted runs predate the theme and site guide features; the theme/guide code is
+covered by the local gate (44 E2E passes) and enters hosted CI with the next
+push. No claim is made here that the hosted workflow has executed those
+features.
+
+The argument-length failure is the kind of platform difference only a hosted
+run exposes; the local gate could not reproduce it.
 
 ### Vercel Services validation (local)
 
@@ -395,10 +474,10 @@ used and no deployment was performed.
 | **A** — requirements and real API verified | Params, units, availability, cutoff ambiguity | **PASS** — documented in `docs/elexon-api-notes.md`; no fabricated schema |
 | **B** — domain correctness | Selection/matching/metrics tested before UI | **PASS** — 78 backend tests, including full-month snapshot invariants |
 | **C** — backend API | Starts, schemas, status codes, CORS, request ids | **PASS** — live service, container service and API tests |
-| **D** — React UI | Core use cases and explicit states | **PASS** — 42 unit tests + 22 E2E passes across Chromium, Firefox and WebKit + browser walkthroughs at 320–1440 px |
+| **D** — React UI | Core use cases and explicit states | **PASS** — 47 unit tests + 44 E2E passes across Chromium, Firefox and WebKit, including the theme chooser and 19-step guide + browser walkthroughs at 320–1440 px |
 | **E** — Docker | Containers build, start and serve real data | **PASS** — deterministic snapshot smoke: both healthchecks, 744/744 API, SPA deep link, CORS, request id; plus earlier live-fetch and `$PORT` checks |
 | **F** — Deployment | Public URL verified | **NOT PERFORMED** — Vercel Services and split-deploy configs prepared and locally exercised with `vercel dev --local`; no credentials used and no URL claimed |
-| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 175 s; GitHub Actions run `40906353001` passed all four jobs |
+| **G** — CI | Workflow defined and mirrored locally | **PASS** — local `scripts/verify.sh` in 161 s; GitHub Actions runs `40906353001` and `40907058285` passed all four jobs, before the theme/guide work |
 
 ## Requirement traceability
 
@@ -415,13 +494,13 @@ used and no deployment was performed.
 | MATCH-01 | Interval matching | Tested | Missing halves excluded; duplicate policies tested |
 | METRIC-01 | MAE/RMSE/MBE, no-data handling | Tested | Known-value and empty-input tests |
 | METRIC-02 | Decision-support measures | Implemented + verified | P90/P95, P90 shortfall, underforecast share, lead-time buckets from matched hours |
-| A11Y-01 | Accessible interface | Verified | axe critical/serious clean on all four routes; four defects found and fixed |
+| A11Y-01 | Accessible interface | Verified | axe critical/serious clean on four routes, the theme chooser, the open guide and the dark overview; four defects found and fixed |
 | API-01 | Documented typed API | Verified | OpenAPI at `/docs`; `docs/api.md`; API tests; request-id contract documented and tested |
-| UI-01/02 | Views and all states | Verified in browser + E2E | Overview, Explorer, Accuracy, Data (hourly + half-hourly); loading/error/partial/fallback; URL-addressable selection and deep links |
-| TEST-01 | At least one E2E path | Verified | 22 passing Playwright results across three browsers: tooltip stability, date selection to metrics, explorer revisions, deep-linked audit, CSV export, failure/retry, axe |
+| UI-01/02 | Views and all states | Verified in browser + E2E | Overview, Explorer, Accuracy, Data (hourly + half-hourly); loading/error/partial/fallback; URL-addressable selection and deep links; three themes and a 19-step guide |
+| TEST-01 | At least one E2E path | Verified | 44 passing Playwright results across three browsers: tooltip stability, date selection to metrics, explorer revisions, deep-linked audit, CSV export, failure/retry, axe, theme persistence and preview, guide navigation, freeze and geometry |
 | OPS-01 | Docker | **Verified** | Snapshot compose smoke with both healthchecks, 744/744 API, SPA routing, CORS, request id; earlier live-fetch and `$PORT` checks |
 | OPS-02 | Vercel/Heroku deployment | **Config prepared and locally validated, not deployed** | One-project Vercel Services config exercised with `vercel dev --local`; split Vercel + Heroku/Render path documented; no URL claimed |
-| OPS-03 | CI workflow | **Verified locally and on GitHub** | `.github/workflows/ci.yml`; run `40906353001` passed backend, frontend, Playwright and container smoke |
+| OPS-03 | CI workflow | **Verified locally and on GitHub** | `.github/workflows/ci.yml`; hosted runs `40906353001` and `40907058285` passed all four jobs before the theme/guide work; local gate passes 44/22 E2E with those features |
 | DOC-01/02 | README + AI disclosure | Implemented | `README.md` includes all required sections |
 | DEL-01 | Public repository | **Published** | `main` pushed to `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Manual, pending** | Require recording and human submission |
@@ -432,13 +511,19 @@ used and no deployment was performed.
   steps exist in [`deployment.md`](deployment.md); the Vercel Services config
   was exercised with `vercel dev --local`, but neither path has been run
   against a live hosting provider.
-- **Browser coverage has limits.** Functional E2E flows now pass in Chromium,
+- **Browser coverage has limits.** Functional E2E flows pass in Chromium,
   Firefox and WebKit, and responsive layout was checked at 320, 390, 606, 768
   and 1440 px in Chromium. No physical mobile device or screen-reader session
   was run; axe remains Chromium-only.
-- **Hosted CI is green.** Run `40906353001` passed all four jobs after the
-  Linux-only smoke-script fix; the local gate remains the faster path for
-  iteration.
+- **Hosted CI is green but predates the theme and guide.** Runs `40906353001`
+  and `40907058285` passed all four jobs before those features existed; the
+  local gate is the only execution that includes them. The local gate remains
+  the faster path for iteration.
+- **Guide geometry is not pixel-tested for every step.** The full-outline,
+  freeze and mobile cases are asserted at two viewports; other step/viewport
+  combinations rely on the geometry logic and manual review.
+- **The theme choice is per browser.** It lives in `localStorage`, so it does
+  not follow a visitor across devices or private windows.
 - **The container smoke needs local Docker and two free host ports.** It
   defaults to 8000/8080 and accepts `API_PORT`/`WEB_PORT` overrides; it tears
   the stack down on exit.
@@ -482,7 +567,10 @@ API_PORT=8030 WEB_PORT=8090 bash scripts/smoke.sh
 docker compose up --build      # or: docker-compose up --build
 ```
 
-Then open <http://127.0.0.1:5173>, select 1–7 January and Full January, open
-Forecast explorer, inspect revisions for 1 Jan 00:00, open Accuracy and Data
-(both tabs), and stop the backend to confirm the error state. With the compose
-stack running, repeat at <http://localhost:8080>.
+Then open <http://127.0.0.1:5173>, pick a theme in the first-visit chooser, open
+the site guide from the header and click through it, select 1–7 January and
+Full January, open Forecast explorer, inspect revisions for 1 Jan 00:00, open
+Accuracy and Data (both tabs), and stop the backend to confirm the error state.
+To see the chooser again, remove `gridbricks.theme` from `localStorage` and
+reload. With the compose stack running, repeat at
+<http://localhost:8080>.

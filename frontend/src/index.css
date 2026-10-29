@@ -8,18 +8,111 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme tokens. Colours are stored as RGB channel triples so Tailwind opacity
+ * modifiers (bg-ink/25, text-paper/65, ...) resolve against the active theme.
+ * `:root` and every `[data-theme]` block define the same custom properties, so
+ * a preview card can scope its own theme while the page keeps another.
+ */
+:root,
+[data-theme="paper"] {
+  --color-paper: 244 241 233;
+  --color-paper-raised: 251 249 243;
+  --color-paper-tint: 235 230 216;
+  --color-ink: 23 21 15;
+  --color-ink-soft: 70 67 57;
+  --color-ink-mute: 107 102 90;
+  --color-rule: rgb(23 21 15 / 0.16);
+  --color-rule-soft: rgb(23 21 15 / 0.08);
+  --color-signal: 198 67 30;
+  --color-signal-soft: 243 226 218;
+  --color-actual: 27 94 87;
+  --color-actual-soft: 221 232 228;
+  --color-ochre: 116 83 13;
+  --color-ochre-soft: 240 231 210;
+  --color-oxblood: 142 42 31;
+  --color-oxblood-soft: 242 223 219;
+  --color-panel: 23 21 15;
+  --color-panel-ink: 244 241 233;
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.045'/%3E%3C/svg%3E");
+  --shadow-plate: 0 1px 0 rgb(23 21 15 / 0.04);
+  --shadow-lift: 0 18px 40px -28px rgb(23 21 15 / 0.55);
+  --shadow-sheet: 0 1px 2px rgb(23 21 15 / 0.04), 0 24px 60px -44px rgb(23 21 15 / 0.45);
+  --shadow-modal: 0 30px 80px -30px rgb(23 21 15 / 0.55);
+}
+
+[data-theme="light"] {
+  --color-paper: 255 255 255;
+  --color-paper-raised: 247 247 248;
+  --color-paper-tint: 238 240 242;
+  --color-ink: 16 17 20;
+  --color-ink-soft: 63 66 74;
+  --color-ink-mute: 102 107 116;
+  --color-rule: rgb(16 17 20 / 0.16);
+  --color-rule-soft: rgb(16 17 20 / 0.08);
+  --color-signal: 198 67 30;
+  --color-signal-soft: 251 233 226;
+  --color-actual: 18 94 86;
+  --color-actual-soft: 224 239 235;
+  --color-ochre: 120 84 8;
+  --color-ochre-soft: 245 236 215;
+  --color-oxblood: 148 41 29;
+  --color-oxblood-soft: 248 229 225;
+  --color-panel: 16 17 20;
+  --color-panel-ink: 255 255 255;
+  --paper-grain: none;
+  --shadow-plate: 0 1px 0 rgb(16 17 20 / 0.04);
+  --shadow-lift: 0 18px 40px -28px rgb(16 17 20 / 0.4);
+  --shadow-sheet: 0 1px 2px rgb(16 17 20 / 0.04), 0 24px 60px -44px rgb(16 17 20 / 0.35);
+  --shadow-modal: 0 30px 80px -30px rgb(16 17 20 / 0.45);
+}
+
+[data-theme="dark"] {
+  --color-paper: 18 18 17;
+  --color-paper-raised: 27 27 25;
+  --color-paper-tint: 36 36 33;
+  --color-ink: 237 234 225;
+  --color-ink-soft: 198 194 183;
+  --color-ink-mute: 152 146 135;
+  --color-rule: rgb(237 234 225 / 0.17);
+  --color-rule-soft: rgb(237 234 225 / 0.09);
+  --color-signal: 232 106 66;
+  --color-signal-soft: 59 33 25;
+  --color-actual: 99 196 182;
+  --color-actual-soft: 23 54 50;
+  --color-ochre: 217 173 91;
+  --color-ochre-soft: 56 46 25;
+  --color-oxblood: 228 131 111;
+  --color-oxblood-soft: 59 30 24;
+  --color-panel: 10 10 9;
+  --color-panel-ink: 240 236 226;
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+  --shadow-plate: 0 1px 0 rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 18px 40px -28px rgb(0 0 0 / 0.8);
+  --shadow-sheet: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 60px -44px rgb(0 0 0 / 0.8);
+  --shadow-modal: 0 30px 80px -30px rgb(0 0 0 / 0.8);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"],
+html[data-theme="paper"] {
+  color-scheme: light;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
-    color-scheme: light;
     scroll-behavior: smooth;
     font-optical-sizing: auto;
   }
 
   body {
     @apply bg-paper font-sans text-[14px] leading-relaxed text-ink antialiased;
-    background-color: #f4f1e9;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.045'/%3E%3C/svg%3E");
+    background-color: rgb(var(--color-paper));
+    background-image: var(--paper-grain);
     overflow-x: clip;
     font-feature-settings: "kern" 1, "liga" 1;
     text-rendering: optimizeLegibility;
@@ -36,18 +129,18 @@
 
 
   ::selection {
-    background: #c6431e;
-    color: #f4f1e9;
+    background: rgb(var(--color-signal));
+    color: rgb(var(--color-paper));
   }
 
   :focus-visible {
-    outline: 2px solid #c6431e;
+    outline: 2px solid rgb(var(--color-signal));
     outline-offset: 2px;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(23, 21, 15, 0.28) transparent;
+    scrollbar-color: rgb(var(--color-ink) / 0.28) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -56,7 +149,7 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: rgba(23, 21, 15, 0.22);
+    background: rgb(var(--color-ink) / 0.22);
     border-radius: 0;
   }
 
@@ -70,8 +163,8 @@
   }
 
   select option {
-    background-color: #fbf9f3;
-    color: #17150f;
+    background-color: rgb(var(--color-paper-raised));
+    color: rgb(var(--color-ink));
   }
 }
 
@@ -156,8 +249,8 @@
 
   @media (min-width: 1440px) {
     .type-area {
-      border-left: 1px solid rgba(23, 21, 15, 0.09);
-      border-right: 1px solid rgba(23, 21, 15, 0.09);
+      border-left: 1px solid rgb(var(--color-ink) / 0.09);
+      border-right: 1px solid rgb(var(--color-ink) / 0.09);
     }
   }
 
@@ -172,7 +265,7 @@
     font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #464339;
+    color: rgb(var(--color-ink-soft));
   }
 
   .table-shell {
@@ -202,11 +295,11 @@
   @media (min-width: 1024px) {
     .data-table thead th:not(:first-child),
     .data-table tbody td:not(:first-child) {
-      border-left: 1px solid rgba(23, 21, 15, 0.055);
+      border-left: 1px solid rgb(var(--color-ink) / 0.055);
     }
 
     .data-table tbody tr:hover {
-      box-shadow: inset 2px 0 0 0 #c6431e;
+      box-shadow: inset 2px 0 0 0 rgb(var(--color-signal));
     }
 
     .data-table thead th:first-child,
@@ -242,7 +335,7 @@
 
     .data-table tbody tr {
       display: block;
-      border-bottom: 1px solid rgba(23, 21, 15, 0.12);
+      border-bottom: 1px solid rgb(var(--color-ink) / 0.12);
       padding: 14px 0;
     }
 
@@ -268,7 +361,7 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       text-align: left;
-      color: #6b665a;
+      color: rgb(var(--color-ink-mute));
     }
 
     .data-table tbody td:not([data-label])::before {
@@ -280,7 +373,7 @@
       padding-top: 0;
       padding-bottom: 9px;
       margin-bottom: 4px;
-      border-bottom: 1px solid rgba(23, 21, 15, 0.08);
+      border-bottom: 1px solid rgb(var(--color-ink) / 0.08);
     }
 
     .data-table tbody td.cell-lead > span:first-child {
@@ -306,9 +399,50 @@
 
   .hairline-grid {
     background-image:
-      linear-gradient(to right, rgba(23, 21, 15, 0.06) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(23, 21, 15, 0.06) 1px, transparent 1px);
+      linear-gradient(to right, rgb(var(--color-ink) / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--color-ink) / 0.06) 1px, transparent 1px);
     background-size: 44px 44px;
+  }
+
+  .panel-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--color-panel-ink) / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--color-panel-ink) / 0.07) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .guide-target {
+    scroll-margin-top: 96px;
+    scroll-margin-bottom: 48px;
+  }
+
+  /*
+   * The guide dims the page with four panels that leave a sharp hole around the
+   * highlighted control. The blur sits on the panels, never on the hole, so the
+   * target stays crisp while the rest of the screen recedes.
+   */
+  .guide-scrim {
+    background-color: rgb(8 8 9 / 0.74);
+    -webkit-backdrop-filter: blur(3px) saturate(0.9);
+    backdrop-filter: blur(3px) saturate(0.9);
+  }
+
+  .guide-spotlight {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.14) inset,
+      0 0 0 4px rgb(var(--color-signal) / 0.14),
+      0 0 48px rgb(var(--color-signal) / 0.32);
+  }
+
+  /* A capped section has no bottom edge: the window fades out instead. */
+  .guide-spotlight-open {
+    box-shadow:
+      0 0 0 4px rgb(var(--color-signal) / 0.14),
+      0 0 48px rgb(var(--color-signal) / 0.32);
+  }
+
+  .guide-corner {
+    box-shadow: 0 0 6px rgb(8 8 9 / 0.55);
   }
 }
 
@@ -320,6 +454,19 @@
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.theme-preview {
+  color-scheme: inherit;
+}
+
+.theme-preview[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+.theme-preview[data-theme="light"],
+.theme-preview[data-theme="paper"] {
+  color-scheme: light;
 }
 
 @media (prefers-reduced-motion: reduce) {

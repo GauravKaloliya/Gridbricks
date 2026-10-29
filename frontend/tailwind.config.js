@@ -4,22 +4,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: "#f4f1e9",
-        "paper-raised": "#fbf9f3",
-        "paper-tint": "#ebe6d8",
-        ink: "#17150f",
-        "ink-soft": "#464339",
-        "ink-mute": "#6b665a",
-        rule: "rgba(23, 21, 15, 0.16)",
-        "rule-soft": "rgba(23, 21, 15, 0.08)",
-        signal: "#c6431e",
-        "signal-soft": "#f3e2da",
-        actual: "#1b5e57",
-        "actual-soft": "#dde8e4",
-        ochre: "#74530d",
-        "ochre-soft": "#f0e7d2",
-        oxblood: "#8e2a1f",
-        "oxblood-soft": "#f2dfdb",
+        // Runtime theme tokens. The channel triples live in index.css so
+        // opacity modifiers such as bg-ink/25 keep working in every theme.
+        paper: "rgb(var(--color-paper) / <alpha-value>)",
+        "paper-raised": "rgb(var(--color-paper-raised) / <alpha-value>)",
+        "paper-tint": "rgb(var(--color-paper-tint) / <alpha-value>)",
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        "ink-soft": "rgb(var(--color-ink-soft) / <alpha-value>)",
+        "ink-mute": "rgb(var(--color-ink-mute) / <alpha-value>)",
+        rule: "var(--color-rule)",
+        "rule-soft": "var(--color-rule-soft)",
+        signal: "rgb(var(--color-signal) / <alpha-value>)",
+        "signal-soft": "rgb(var(--color-signal-soft) / <alpha-value>)",
+        actual: "rgb(var(--color-actual) / <alpha-value>)",
+        "actual-soft": "rgb(var(--color-actual-soft) / <alpha-value>)",
+        ochre: "rgb(var(--color-ochre) / <alpha-value>)",
+        "ochre-soft": "rgb(var(--color-ochre-soft) / <alpha-value>)",
+        oxblood: "rgb(var(--color-oxblood) / <alpha-value>)",
+        "oxblood-soft": "rgb(var(--color-oxblood-soft) / <alpha-value>)",
+        // Always-dark chrome (top strip, footer) so themes never invert it.
+        panel: "rgb(var(--color-panel) / <alpha-value>)",
+        "panel-ink": "rgb(var(--color-panel-ink) / <alpha-value>)",
       },
       fontFamily: {
         serif: ["Newsreader Variable", "Newsreader", "Georgia", "serif"],
@@ -33,9 +38,9 @@ export default {
         mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       boxShadow: {
-        plate: "0 1px 0 rgba(23,21,15,0.04)",
-        lift: "0 18px 40px -28px rgba(23,21,15,0.55)",
-        sheet: "0 1px 2px rgba(23,21,15,0.04), 0 24px 60px -44px rgba(23,21,15,0.45)",
+        plate: "var(--shadow-plate)",
+        lift: "var(--shadow-lift)",
+        sheet: "var(--shadow-sheet)",
       },
       keyframes: {
         "fade-up": {
@@ -50,11 +55,27 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "guide-fade": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "guide-step": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "guide-pulse": {
+          "0%": { opacity: "0.7", transform: "scale(1)" },
+          "70%": { opacity: "0", transform: "scale(1.045)" },
+          "100%": { opacity: "0", transform: "scale(1.045)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
         "rule-in": "rule-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
         "ink-in": "ink-in 0.9s ease-out both",
+        "guide-fade": "guide-fade 0.28s ease-out both",
+        "guide-step": "guide-step 0.38s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "guide-pulse": "guide-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite",
       },
     },
   },

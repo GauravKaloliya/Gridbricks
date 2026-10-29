@@ -13,11 +13,55 @@
     />
     <title>Gridbricks | Wind Forecast Analytics</title>
     <style>
-      html,
-      body {
+      html {
         background-color: #f4f1e9;
       }
+      html[data-theme="light"] {
+        background-color: #ffffff;
+      }
+      html[data-theme="dark"] {
+        background-color: #121211;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+      }
     </style>
+    <script>
+      // Apply the saved theme before first paint so the page never flashes the
+      // wrong background. The React ThemeProvider owns the value afterwards.
+      (function () {
+        try {
+          var stored = window.localStorage.getItem("gridbricks.theme");
+          var theme =
+            stored === "paper" || stored === "light" || stored === "dark"
+              ? stored
+              : "paper";
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.style.colorScheme =
+            theme === "dark" ? "dark" : "light";
+          document.documentElement.style.backgroundColor =
+            theme === "dark"
+              ? "#121211"
+              : theme === "light"
+                ? "#ffffff"
+                : "#f4f1e9";
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute(
+              "content",
+              theme === "dark"
+                ? "#121211"
+                : theme === "light"
+                  ? "#ffffff"
+                  : "#f4f1e9",
+            );
+          }
+        } catch (error) {
+          /* Private-mode storage failures fall back to the paper theme. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

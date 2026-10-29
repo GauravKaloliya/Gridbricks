@@ -85,7 +85,10 @@ export function OverviewPage() {
                 Forecast error · MW
               </p>
             </div>
-            <div className="mt-2 grid divide-y divide-rule-soft border-y border-ink/25 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:divide-rule xl:grid-cols-4">
+            <div
+              className="mt-2 grid divide-y divide-rule-soft border-y border-ink/25 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:divide-rule xl:grid-cols-4"
+              data-tour="overview-kpis"
+            >
               <KpiCard
                 label="MAE"
                 value={formatMW(query.data.metrics.mae)}
@@ -128,6 +131,7 @@ export function OverviewPage() {
               className="lg:col-span-2"
               title="Selected forecast versus actual"
               subtitle={`${formatLongDate(range.start)} – ${formatLongDate(range.end)} · Europe/London`}
+              tourId="overview-chart"
             >
               <ForecastActualChart intervals={query.data.intervals} />
             </SectionCard>
@@ -194,7 +198,7 @@ export function OverviewPage() {
                 </p>
               </SectionCard>
 
-              <SectionCard title="Data provenance">
+              <SectionCard title="Data provenance" tourId="overview-provenance">
                 <FreshnessBadge freshness={query.data.freshness} />
               </SectionCard>
             </div>

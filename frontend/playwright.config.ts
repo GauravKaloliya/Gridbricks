@@ -22,6 +22,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: `http://127.0.0.1:${webPort}`,
+    storageState: "./e2e/storage-state.json",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },

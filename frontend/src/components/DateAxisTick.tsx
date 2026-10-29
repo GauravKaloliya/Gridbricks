@@ -1,6 +1,7 @@
 import { Text } from "recharts";
 
 import { formatAxisDateTime } from "../lib/format";
+import { useChartPalette } from "./ThemeContext";
 
 interface DateAxisTickProps {
   x?: number;
@@ -19,6 +20,7 @@ export function DateAxisTick({
   visibleTicksCount = 1,
   verticalAnchor = "start",
 }: DateAxisTickProps) {
+  const palette = useChartPalette();
   if (!payload || payload.value === undefined) return null;
 
   const isLast = index === visibleTicksCount - 1;
@@ -31,7 +33,7 @@ export function DateAxisTick({
       verticalAnchor={verticalAnchor}
       fontFamily="IBM Plex Mono, ui-monospace, monospace"
       fontSize={9}
-      fill="#6b665a"
+      fill={palette.inkMute}
     >
       {formatAxisDateTime(String(payload.value))}
     </Text>

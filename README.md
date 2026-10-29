@@ -40,6 +40,7 @@ missing value, and failed request is visible and traceable.
 | [At a glance](#at-a-glance) | [Why this exists](#why-this-exists) | [Results on real data](#results-on-real-data) |
 | [Product tour](#product-tour) | [Technology stack](#technology-stack) | [Quickstart](#quickstart) |
 | [Deployment](#deployment) | [Architecture](#architecture) | [Frontend deep dive](#frontend-deep-dive) |
+| [Themes](#themes) | [Site guide](#site-guide) | [Accessibility](#accessibility-and-responsiveness) |
 | [Backend deep dive](#backend-deep-dive) | [Data engineering](#data-engineering) | [Methods and correctness](#methods-and-correctness) |
 | [API reference](#api-reference) | [Performance](#performance) | [Testing and evidence](#testing-and-evidence) |
 | [Repository guide](#repository-guide) | [Configuration](#configuration) | [Docker](#docker) |
@@ -61,8 +62,9 @@ missing value, and failed request is visible and traceable.
 | **Frontend** | React 19.3, TypeScript 5.9, Vite 6.4, TanStack Query 5.105, React Router 6.30, Recharts 2.15, Tailwind CSS 3.4. |
 | **Backend** | Python 3.12, FastAPI 0.115, Pydantic 2, httpx, Uvicorn. Pure domain layer, typed OpenAPI contract. |
 | **Storage** | No database. A 2,511,322-byte provenance-stamped snapshot plus an optional 7-day disk cache. |
+| **Experience** | Three themes (Paper, Light, Dark) with a first-visit chooser and live preview; a 19-step site guide that freezes the page and spotlights each control. |
 | **Result** | 744 / 744 intervals matched; MAE **2,122.81 MW**, RMSE **2,616.69 MW**, MBE **+1,840.30 MW**. |
-| **Verification** | 78 backend tests, 42 frontend unit tests, 10 E2E tests across 3 browsers, Docker smoke, hosted CI green. |
+| **Verification** | 78 backend tests, 47 frontend unit tests, 22 E2E tests across 3 browsers (66 runs), axe clean on four routes plus the chooser, guide and dark theme, Docker smoke, hosted CI green on the published commit (before the theme/guide work). |
 | **Deployment** | Vercel Services config committed and exercised locally; Docker/Render/Heroku paths documented. **Not publicly deployed.** |
 | **License** | MIT. Data attribution: public Elexon BMRS data. |
 
@@ -72,12 +74,12 @@ missing value, and failed request is visible and traceable.
 | --- | ---: | --- |
 | Python application | 1,921 | 4 domain modules, 3 data modules, 5 core modules, API, services, schemas, 2 entrypoints |
 | Python tests | 1,240 | 78 tests across 11 files |
-| Frontend TypeScript/TSX | 3,557 | 4 pages, 17 components, query hooks, typed API client, formatting and CSV libraries |
-| Frontend tests | 842 | 42 tests across 9 files |
-| Stylesheet | 334 | Tailwind layers, editorial typography, responsive table-to-card rules |
-| E2E specs | 224 | 6 functional flows and 4 axe route checks |
-| Documentation | 3,739 | This README plus 7 documents in `docs/` |
-| **Code + tests** | **8,118** | Excludes documentation, lockfiles, fonts, and the data snapshot |
+| Frontend TypeScript/TSX | 5,466 | 5 pages, 22 components, 3 providers, query hooks, typed API client, formatting, CSV, theme palettes, guide steps |
+| Frontend tests | 1,012 | 47 tests across 11 files |
+| Stylesheet | 481 | Tailwind layers, editorial typography, responsive table-to-card rules, theme tokens, guide spotlight |
+| E2E specs | 642 | 6 analysis flows, 9 theme and guide flows, 7 axe checks |
+| Documentation | 4,028 | This README plus 7 documents in `docs/` |
+| **Code + tests** | **10,762** | Excludes documentation, lockfiles, fonts, and the data snapshot |
 
 ---
 
@@ -221,6 +223,11 @@ MAE/RMSE/MBE, percentiles, and lead-time bucket partition to the values above.
 | [![Accuracy: error chart and decision support](docs/screenshots/accuracy-decision-support.png)](docs/screenshots/accuracy-decision-support.png) | [![Data table: interval audit with statuses](docs/screenshots/data-table.png)](docs/screenshots/data-table.png) |
 | Error distribution, definitions, lead-time buckets, largest misses | Hourly audit plus raw half-hourly FUELHH records, CSV export |
 
+| Theme chooser | Site guide |
+| --- | --- |
+| [![Theme chooser: Paper, Light and Dark previews](docs/screenshots/theme-chooser.png)](docs/screenshots/theme-chooser.png) | [![Site guide: frozen overview with a spotlight and step card](docs/screenshots/site-guide.png)](docs/screenshots/site-guide.png) |
+| First visit, live previews, three stored themes | Frozen page, full spotlight, card clear of the target |
+
 <p align="center">
   <img src="docs/screenshots/overview-mobile.png" alt="Gridbricks mobile overview at 390 pixels" width="320" />
 </p>
@@ -234,6 +241,10 @@ MAE/RMSE/MBE, percentiles, and lead-time bucket partition to the values above.
 | `/accuracy` | Accuracy analysis | How is the error distributed, and what does it imply for reserve cover? | Metric cards, signed-error chart, P90/P95/shortfall/underforecast panel, lead-time buckets, top 5 misses, data-quality counts, definitions | Loading, error + retry, partial, `no_data` |
 | `/data` | Data table | What exactly happened in each interval, and why is a row unavailable? | Hourly table (25/page), half-hourly actuals tab (50/page), CSV export, provenance | Loading, error + retry, partial, empty, pagination |
 | `*` | Not found | — | Editorial 404 with a route back to the overview | — |
+
+Two cross-cutting surfaces sit above the routes: a first visit opens the
+three-theme chooser, and the header offers the 19-step site guide on every
+page. The guide freezes the app while it points at each control in turn.
 
 ### What the app does
 
@@ -260,6 +271,19 @@ MAE/RMSE/MBE, percentiles, and lead-time bucket partition to the values above.
   snapshot, and fallback are visible. Unavailable values are never replaced
   with zero.
 - **Mobile-first** — tables reflow to record cards; tested from 320 px upward.
+- **Three themes** — Paper, Light, and Dark. A first visit opens a three-card
+  chooser with live previews; the header control reopens it later. The choice
+  is stored in `localStorage` under `gridbricks.theme`, applied before first
+  paint, and synced across tabs.
+- **Site guide** — a 19-step tour across all four routes. While it is open the
+  page is frozen: the app shell is `inert`, document scrolling is locked, and
+  the scrollbar is compensated so nothing shifts. Each target sits in a crisp
+  spotlight over a blurred scrim; the card is placed below, above, right, or
+  left of it, never on top, and becomes a bottom sheet on phones. Medium and
+  tall sections are enclosed completely when a readable card fits beside them;
+  when it does not, the window is capped and fades at the bottom instead of
+  ending in a hard line. Exit, Back and Continue, arrow keys, and Escape all
+  work, with focus trapped in the card and restored on exit.
 
 ---
 
@@ -280,6 +304,7 @@ by `package-lock.json` on 29 October 2026.
 | Server state | TanStack Query | `^5.62.7` | 5.105.0 | Caching, retry policy, request lifecycle states |
 | Charts | Recharts | `^2.15.0` | 2.15.4 | Forecast/actual series and signed-error bars |
 | Styling | Tailwind CSS | `^3.4.17` | 3.4.19 | Design tokens, responsive utilities, component classes |
+| Platform features | HTML `inert`, `localStorage`, `StorageEvent`, `matchMedia`, `createPortal` | native | native | Frozen guide background, stored theme, cross-tab sync, reduced motion, portalled overlays |
 | CSS pipeline | PostCSS + Autoprefixer | `^8.4.49` / `^10.4.20` | 8.5.32 / 10.6.2 | Vendor prefixing and Tailwind processing |
 | Fonts | Newsreader Variable, IBM Plex Sans Variable, IBM Plex Mono | `^5.3.0` | 5.3.0 | Self-hosted editorial typography via `@fontsource` |
 | Type definitions | `@types/react` + `@types/react-dom` | `^19.0.3` / `^19.0.2` | 19.3.0 | React type contracts |
@@ -382,16 +407,17 @@ provenance block. It never fills gaps.
 
 | Command | What it does | Observed |
 | --- | --- | --- |
-| `bash scripts/verify.sh` | Full local gate: backend, unit, build, budget, three-browser E2E, Docker smoke | **175 s**, exit 0 |
+| `bash scripts/verify.sh` | Full local gate: backend, unit, build, budget, three-browser E2E, Docker smoke | **161 s**, exit 0 |
 | `bash scripts/verify.sh --no-docker` | Same gate without rebuilding containers | Skips Compose |
 | `bash scripts/verify.sh --no-e2e` | Skips Playwright for a fast loop | Skips E2E |
 | `bash scripts/smoke.sh` | Builds and asserts the Compose stack in snapshot mode | Passed |
 | `cd backend && python -m pytest -q` | Backend suite | **78 passed in 1.73 s** |
 | `cd frontend && npx tsc --noEmit` | Strict typecheck | Clean |
-| `cd frontend && npx vitest run` | Frontend unit suite | **42 passed** |
-| `cd frontend && npm run build` | Typecheck + production build | **3.35 s** |
-| `cd frontend && node scripts/check-bundle-budget.mjs` | Largest-chunk budget | **375.33 kB < 500 kB** |
-| `cd frontend && npm run test:e2e` | Playwright across Chromium, Firefox, WebKit | **22 passed, 8 skipped** |
+| `cd frontend && npx vitest run` | Frontend unit suite | **47 passed** |
+| `cd frontend && npm run build` | Typecheck + production build | **2.32 s** |
+| `cd frontend && node scripts/check-bundle-budget.mjs` | Largest-chunk budget | **384.36 kB (375.35 KiB) < 500 KiB** |
+| `cd frontend && npm run test:e2e` | Playwright across Chromium, Firefox, WebKit | **44 passed, 22 skipped** |
+| `cd frontend && npx playwright test e2e/theme-guide.spec.ts --project=chromium` | Theme and guide flows plus the guide geometry regression | **9 passed** |
 
 ---
 
@@ -467,7 +493,7 @@ If you prefer separate hosts:
 | Docker Compose | **Verified** | Images 53.7 MB / 21.9 MB; smoke asserts both healthchecks, 744/744 API rows, SPA deep link, CORS, request IDs |
 | Vercel Services config | **Validated locally, not deployed** | `vercel dev --local` served `/health`, `/api/meta`, full-month accuracy (744 rows), `/`, `/accuracy`, `/openapi.json`, `/docs`, and `X-Request-ID` |
 | Public hosting URL | **Not performed** | No credentials used; no URL claimed |
-| Hosted CI | **Verified** | GitHub Actions run `40907058285` passed all four jobs in 2m37s |
+| Hosted CI | **Verified** | GitHub Actions run `40907058285` passed all four jobs in 2m37s on the published commit, before the theme and guide work |
 
 > **Deployment status:** the configuration is committed and has been exercised
 > locally with `vercel dev --local` and the Docker smoke. **No public URL is
@@ -571,25 +597,29 @@ duration, and id on one line.
 | Entry point | `main.tsx` mounts React in `StrictMode`, wraps the app in `QueryClientProvider` and `BrowserRouter` with v7 transition flags |
 | Query defaults | `retry: 1`, `refetchOnWindowFocus: false`; per-hook `staleTime` overrides |
 | Routing | Four lazy-loaded pages plus a 404 inside a shared `Layout` route |
+| Providers | `ThemeProvider` (committed and previewed theme, dialog state, cross-tab sync), `GuideProvider` (open state, step index, start/exit/next/previous), `DateRangeProvider` |
+| Header controls | Primary navigation, appearance control showing the current theme, and the site-guide launcher |
 | Date state | `DateRangeProvider` keeps `start`/`end` in the URL and clamps them to the analysis period |
 | Data access | Typed `fetchAccuracy`, `fetchMeta`, `fetchActuals`, `fetchRevisions` functions with timeout and error mapping |
-| Visual system | Tailwind tokens, editorial type classes, paper grain, rules, and responsive tables |
+| Visual system | Tailwind tokens, editorial type classes, paper grain, rules, responsive tables, and three theme token sets |
 
 ### Routes and code splitting
 
 | Path | Component | Chunk observed |
 | --- | --- | ---: |
-| `/` | `OverviewPage` | 43 kB |
-| `/forecasts` | `ForecastExplorerPage` | 9.9 kB |
-| `/accuracy` | `AccuracyPage` | 15 kB |
-| `/data` | `DataPage` | 12 kB |
-| — | Shared entry | 282 kB |
-| — | Recharts/date-axis chunk | 375.33 kB (largest) |
-| — | CSS | 42 kB |
+| `/` | `OverviewPage` | 44.3 kB |
+| `/forecasts` | `ForecastExplorerPage` | 10.2 kB |
+| `/accuracy` | `AccuracyPage` | 15.1 kB |
+| `/data` | `DataPage` | 12.8 kB |
+| — | Shared entry | 322.8 kB |
+| — | Recharts/date-axis chunk | 384.4 kB (largest) |
+| — | CSS | 53.2 kB |
 
 Every page is loaded with `React.lazy`; `Suspense` shows a `role="status"`
 loading fallback. The chart library is isolated in its own async chunk, so it
-does not block the shell or non-chart pages.
+does not block the shell or non-chart pages. The theme provider, chooser, and
+guide overlay live in the shared entry, so their controls work on every route
+without an extra request.
 
 ### Data-fetching policy
 
@@ -619,6 +649,10 @@ half-hourly records. The revisions request is gated by the selected interval.
   `/forecasts`, producing a shareable audit link.
 
 ### Design system
+
+The token table below is the **Paper** default. Light and Dark override the
+same custom properties on `html[data-theme="…"]`; see [Themes](#themes) for the
+three palettes and how the choice is stored.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -661,18 +695,105 @@ Texture and motion:
 - Focus is always signal red with a 2 px outline and offset; a skip link is the
   first focusable element.
 
+### Themes
+
+Three themes ship in one bundle: **Paper** (the warm editorial default),
+**Light** (neutral white), and **Dark** (low-light charcoal). All colours are
+CSS custom properties stored as RGB channel triples, so any token can be
+composed with an alpha value, e.g. `rgb(var(--color-ink) / 0.6)`. Each theme
+redefines the same names on `html[data-theme="…"]`, so no component needs a
+theme-specific branch.
+
+| Theme | Surface | Ink | Signal | Actual |
+| --- | --- | --- | --- | --- |
+| Paper | `#f4f1e9` | `#17150f` | `#c6431e` | `#1b5e57` |
+| Light | `#ffffff` | `#101114` | `#c6431e` | `#125e56` |
+| Dark | `#121211` | `#edeae1` | `#e86a42` | `#63c4b6` |
+
+How the choice is made and kept:
+
+- **First visit** — `ThemeDialog` opens automatically when `gridbricks.theme`
+  is absent. It presents three preview cards in a `radiogroup`; selecting a
+  card previews the whole app immediately, and **Continue with <theme>**
+  commits the choice.
+- **Every later visit** — an inline script in `index.html` reads the stored
+  value and sets `data-theme`, `color-scheme`, the page background, and the
+  `theme-color` meta **before first paint**, so there is no flash of the wrong
+  theme. If storage is unavailable, it falls back to Paper.
+- **Changing it** — the header control shows the current theme name and
+  reopens the same dialog. Escape or the close control restores the committed
+  theme instead of keeping an uncommitted preview.
+- **Across tabs** — a `storage` listener applies a change made in another tab.
+- **Charts** — Recharts needs concrete colour strings, so charts read
+  `useChartPalette()`, a typed palette per theme, rather than parsing CSS
+  variables at runtime.
+- **Accessibility** — the chooser is a labelled dialog with roving focus,
+  arrow-key selection, visible focus, and a swipeable card rail on phones.
+  The chooser, the open guide, and the dark overview are all in the axe suite.
+
+The choice is stored per browser and device; there is no account or server-side
+preference to synchronise.
+
+### Site guide
+
+The guide is a 19-step tour defined in
+[`src/lib/guide.ts`](frontend/src/lib/guide.ts). Each step declares a route, a
+title and body, an optional tip, and an optional `data-tour` target. Steps use
+semantic targets rather than CSS selectors, so restyling does not break the
+tour. It opens only from the header button — nothing launches it automatically
+— and the last step returns to the overview.
+
+**Frozen page.** While the guide is open it sets `inert` on `#root`, sets
+`overflow: hidden` on `html` and `body`, disables overscroll, and pads for the
+removed scrollbar so the layout does not jump. Every previous inline style is
+recorded and restored, the attribute is removed, and focus returns to the
+control that started the guide.
+
+**Scrim and spotlight.** The overlay is portalled to `document.body` above the
+app shell. Four fixed scrim panels surround a crisp rectangular hole, so the
+target keeps full contrast while everything else is dimmed and blurred. The
+hole carries a signal border, a soft glow, a pulse ring, corner brackets, and a
+step badge (`04 / 19`). A target that is missing — for example on an empty
+range — still gets its card, centered, with a plain scrim and no hole.
+
+**Card placement.** The card is measured with `useLayoutEffect`, then placed
+below, above, right, or left of the hole. If none of those fit it uses a
+partial placement with internal scrolling and a minimum height of 240 px. It is
+never centered over the spotlight. On phones it becomes a bottom sheet with a
+minimum of 160 px. If the full outline leaves no room for a readable card, the
+hole is capped and the card sits directly beneath it; the capped window ends in
+a 56 px fade and omits its bottom border and bottom corners, so it reads as
+"continues below" rather than a broken outline.
+
+**Scrolling and readiness.** Small controls are centered; medium and tall
+sections are aligned just under the sticky header so the whole section and the
+card can be seen together. Each step measures its target after scrolling,
+waits for the rectangle to settle, and holds the previous card position until
+the new spotlight is ready instead of blinking out.
+
+**Keyboard and focus.** The card is a `role="dialog"` with `aria-modal="true"`,
+labelled by its title and described by its body. Focus moves into the card and
+is trapped there; Escape exits, the arrow keys move between steps, and Exit,
+Back, Continue, and Finish are real buttons. A visible hint repeats the keys,
+and `prefers-reduced-motion` disables smooth scrolling and the pulse.
+
 ### Component inventory
 
 | Component | Responsibility |
 | --- | --- |
-| `Layout` | Skip link, data bar, sticky header, primary nav, suspense fallback, editorial footer |
+| `Layout` | Skip link, data bar, sticky header, primary nav, appearance control, guide launcher, suspense fallback, editorial footer |
 | `PageHeader` | Eyebrow, title, description, and page controls (date range) |
-| `SectionCard` | Bordered section with title, subtitle, and optional action |
+| `SectionCard` | Bordered section with title, subtitle, optional action, and guide target id |
 | `KpiCard` | Metric value, unit, hint, optional meter and tone, staggered reveal |
 | `States` | `LoadingState` skeleton (`role="status"`), `ErrorState` (`role="alert"` with retry), `EmptyState`, `PartialDataBanner`, `FreshnessBadge` |
 | `StatusBadge` | Matched / missing forecast / missing actual / invalid record with detail |
 | `DateRangeControl` | Start/end date inputs, presets, validation, and reset |
 | `DateRangeContext` | URL-backed range state, clamping, 31-day cap, default window |
+| `ThemeContext` | Committed and previewed theme, `localStorage` persistence, first-visit trigger, cross-tab sync |
+| `ThemeDialog` | Accessible three-theme chooser with preview cards, swatches, keyboard selection, and mobile swipe rail |
+| `ThemePreview` | Miniature page mock, token swatches, and chart preview used by each theme card |
+| `GuideContext` | Open state, step index, step count, start/exit/next/previous |
+| `GuideOverlay` | Portalled scrim and spotlight, card placement, frozen page, focus trap, keyboard controls |
 | `ForecastActualChart` | Forecast and actual series with accessible labels and a stable tooltip |
 | `ErrorChart` | Signed-error bars, zero reference, no entry animation |
 | `DateAxisTick` | Shared date tick formatting for both charts |
@@ -689,7 +810,9 @@ Both charts use Recharts with **entry animation disabled**
 (`isAnimationActive={false}`). The tooltip is pointer-tracked without an
 animated transition, so it does not drift or shake when the pointer moves
 quickly across dense hourly data. This behavior is covered by a regression
-test: *"chart tooltip tracks the pointer without animated drift."*
+test: *"chart tooltip tracks the pointer without animated drift."* Axis, grid,
+cursor, and series colours come from `useChartPalette()`, so both charts stay
+legible in all three themes.
 
 - **Forecast vs actual** — two lines, shared date axis, legend, responsive
   container, explicit empty state when no intervals exist.
@@ -714,6 +837,9 @@ the only way to read the result.
   attributes become uppercase mono labels via CSS `::before`. No horizontal
   scroll is required on a 320 px viewport.
 - Touch targets are raised to 44 px under `(pointer: coarse)`.
+- The theme chooser turns into a swipeable card rail, and the guide becomes a
+  bottom sheet with internal scrolling rather than a card that leaves the
+  viewport.
 
 ### CSV contract
 
@@ -741,31 +867,40 @@ Excel opens it correctly, and the object URL is revoked after the click.
 
 ### Accessibility and responsiveness
 
-- Axe checks run on `/`, `/forecasts`, `/accuracy`, and `/data`, failing on any
+- Axe checks run on `/`, `/forecasts`, `/accuracy`, `/data`, the first-visit
+  theme chooser, the open guide, and the dark overview, failing on any
   **critical** or **serious** violation. Four defects were found and fixed
   during development.
 - Semantic headings, table captions, `scope="col"`, `role="status"` for loading,
   `role="alert"` for errors, `aria-live="polite"` fallbacks, and visible focus.
-- Color is never the only signal: status text and detail accompany color.
-- Reduced motion is honored globally.
-- Layout was checked at **320, 390, 606, 768, and 1440 px** in Chromium. Real
-  mobile devices and a screen-reader session were not tested; axe runs on
+- The theme chooser and the guide are both labelled modal dialogs: focus enters,
+  is trapped, and returns to the trigger; the guide makes the app shell `inert`
+  while it is open, so the background cannot be tabbed into or clicked.
+- Colour is never the only signal: status text and detail accompany colour, and
+  each theme defines its own ink, rule, and accent values rather than reusing
+  paper colours on a dark surface.
+- Reduced motion is honored globally, including chart entry, guide pulse, and
+  smooth scrolling.
+- Layout was checked at **320, 390, 606, 768, and 1440 px** in Chromium; guide
+  geometry was audited at 1440×1000, 1512×860, 1280×720, 390×844, and 320×568.
+  Real mobile devices and a screen-reader session were not tested; axe runs on
   Chromium only.
 
 ### Bundle and build
 
 | Artifact | Size |
 | --- | ---: |
-| Entry JS | 282 kB |
-| Largest async chunk (Recharts/date axis) | 375.33 kB by the budget check |
+| Entry JS (app shell, theme, guide) | 322.8 kB |
+| Largest async chunk (Recharts/date axis) | 384.4 kB |
 | Largest allowed chunk | 500 kB |
-| CSS | 42 kB |
-| Production build | 3.35 s |
+| CSS | 53.2 kB |
+| Production build | 2.32 s |
 | Fonts | Self-hosted, unicode-range subsets |
 
-The budget script fails the build gate if any chunk exceeds 500 kB. The chart
-chunk is deliberately isolated so the shell, tables, and state pages stay
-small.
+The budget script reads the largest chunk from `dist/assets` and compares it
+with a 500 KiB limit; it reports 375.35 KiB for the same 384.36 kB decimal
+file. The chart chunk is deliberately isolated so the shell, tables, and state
+pages stay small.
 
 ---
 
@@ -1368,9 +1503,9 @@ Notes:
 | --- | ---: |
 | Backend tests | 1.73 s for 78 tests |
 | Frontend typecheck | clean |
-| Frontend production build | 3.35 s |
-| Bundle budget | 375.33 kB largest chunk (< 500 kB) |
-| Local full gate | 175 s, exit 0 |
+| Frontend production build | 2.32 s |
+| Bundle budget | 384.36 kB decimal / 375.35 KiB largest chunk (< 500 KiB) |
+| Local full gate | 161 s, exit 0 |
 | Docker backend image | 53.7 MB |
 | Docker frontend image | 21.9 MB |
 
@@ -1390,6 +1525,11 @@ The earlier green run `40906353001` took 2m54s. The first run
 (279,016 bytes) was passed as a command-line argument and exceeded Linux's
 per-argument limit; the script now pipes JSON into Python on stdin.
 
+This run predates the three-theme and site-guide work. Those features are
+verified locally by the unit, E2E, axe, and guide-geometry runs described in
+[Testing and evidence](#testing-and-evidence); they enter hosted CI with the
+next push.
+
 ---
 
 ## Testing and evidence
@@ -1399,13 +1539,13 @@ per-argument limit; the script now pipes JSON into Python on stdin.
 | Layer | Result | Command | Scope |
 | --- | --- | --- | --- |
 | Backend | **78 passed** | `cd backend && python -m pytest -q` | Domain, data, API, observability, robustness, snapshot invariants |
-| Frontend unit | **42 passed** | `cd frontend && npx vitest run` | Formatting, API client, state components, tables, CSV, overview |
+| Frontend unit | **47 passed** | `cd frontend && npx vitest run` | Formatting, API client, state components, tables, CSV, overview, theme and guide state |
 | Typecheck | **clean** | `cd frontend && npx tsc --noEmit` | Strict TypeScript |
-| End-to-end | **22 passed, 8 skipped, 30 runs** | `cd frontend && npm run test:e2e` | 6 functional flows × 3 browsers; 4 axe routes on Chromium |
-| Accessibility | **axe critical/serious clean** | `cd frontend && npm run test:e2e` | `/`, `/forecasts`, `/accuracy`, `/data` |
+| End-to-end | **44 passed, 22 skipped, 66 runs** | `cd frontend && npm run test:e2e` | 6 analysis + 9 theme/guide flows × 3 browsers; 7 axe checks on Chromium |
+| Accessibility | **axe critical/serious clean** | `cd frontend && npm run test:e2e` | Four routes, the theme chooser, the guide overlay, and the dark theme |
 | Container smoke | **passed** | `bash scripts/smoke.sh` | Build, health, 744/744 API, SPA deep link, CORS, request IDs |
-| Bundle budget | **passed** | `node scripts/check-bundle-budget.mjs` | 500 kB per-chunk limit |
-| Full local gate | **passed in 175 s** | `bash scripts/verify.sh` | Everything above plus Compose config |
+| Bundle budget | **passed** | `node scripts/check-bundle-budget.mjs` | 500 KiB per-chunk limit |
+| Full local gate | **passed in 161 s** | `bash scripts/verify.sh` | Everything above plus Compose config |
 
 ### Backend matrix
 
@@ -1434,12 +1574,14 @@ per-argument limit; the script now pipes JSON into Python on stdin.
 | `src/lib/csv.test.ts` | 4 | Header order, quoting, CRLF, empty values |
 | `src/components/DataTable.test.tsx` | 3 | Rows, pagination, status detail |
 | `src/components/DecisionSupportPanel.test.tsx` | 3 | Percentiles, buckets, top misses |
+| `src/components/ThemeContext.test.tsx` | 3 | First-visit prompt, stored choice, escaped preview |
+| `src/components/GuideContext.test.tsx` | 2 | Step order, clamping at both ends, reset after the last step |
 | `src/pages/OverviewPage.test.tsx` | 3 | Loading, error, populated states |
 | `src/components/ActualsTable.test.tsx` | 2 | Half-hour records and pagination |
 
 ### End-to-end coverage
 
-Six functional tests run in Chromium, Firefox, and WebKit at 1440×1000:
+Six analysis flows run in Chromium, Firefox, and WebKit at 1440×1000:
 
 1. Selecting the full month updates metrics, chart, and downstream views.
 2. Chart tooltip tracks the pointer without animated drift.
@@ -1448,10 +1590,20 @@ Six functional tests run in Chromium, Firefox, and WebKit at 1440×1000:
 5. Data page switches between hourly intervals and half-hourly actuals.
 6. An API failure is visible and retry recovers without substituted values.
 
-Four axe tests cover `/`, `/forecasts`, `/accuracy`, and `/data`. They are
-skipped outside Chromium, which produces **22 passes and 8 skips** across the
-30 scheduled runs (6 × 3 + 4 Chromium). Playwright runs one worker at
-1440×1000 with a 45 s timeout; traces and screenshots are retained on failure.
+Nine theme and guide flows cover the four chooser cases (first visit, dismiss
+and ask again, arrow-key preview with Escape restoring the committed theme, and
+reopening from the header), plus five guide cases: header launch with Continue,
+Back, Exit, and Escape; a frozen page with no card/spotlight overlap; a medium
+section fully enclosed by the spotlight; the whole 19-step tour across all four
+routes; and a mobile pass at 390×844. Firefox and WebKit run the analysis
+flows, the four chooser cases, and the header launch; Chromium also runs the
+freeze, geometry, full-tour, and mobile layout checks.
+
+Seven axe checks cover `/`, `/forecasts`, `/accuracy`, `/data`, the theme
+chooser, the guide overlay, and the dark theme. They are skipped outside
+Chromium, which produces **44 passes and 22 skips** across the 66 scheduled
+runs (22 × 3). Playwright runs one worker at 1440×1000 with a 45 s timeout;
+traces and screenshots are retained on failure.
 
 ### What the suites actually assert
 
@@ -1467,6 +1619,10 @@ skipped outside Chromium, which produces **22 passes and 8 skips** across the
   MAE/RMSE/MBE, percentiles, and bucket partition to the documented values.
 - **UI honesty** — error and partial states are visible; retry recovers; no
   zero is substituted for an unavailable value.
+- **Guide geometry** — the card never overlaps the spotlight, a medium section
+  is fully enclosed, the app shell is `inert` while open, and focus is trapped.
+- **Theme persistence** — the first visit prompts once, a stored choice is
+  reused, and Escape restores the committed theme instead of a preview.
 - **Accessibility** — no critical or serious axe violations on any route.
 
 ### CI topology
@@ -1486,8 +1642,11 @@ skipped outside Chromium, which produces **22 passes and 8 skips** across the
 The complete ledger, including exact outputs and known gaps, is
 [`docs/implementation-status.md`](docs/implementation-status.md). In summary:
 
-- Local gate executed on this machine: **175 s, exit 0**.
-- Hosted CI green: run `40907058285`, all four jobs.
+- Local gate executed on this machine: **161 s, exit 0**.
+- Hosted CI green: run `40907058285`, all four jobs, on the published commit
+  before the theme and guide work.
+- Theme and guide covered by 47 unit tests and 44 E2E passes across three
+  browsers; guide geometry audited at five viewports, all passing.
 - Docker smoke green: 744/744 API rows, both healthchecks, SPA deep link, CORS,
   request IDs.
 - Vercel config exercised with `vercel dev --local`; **not deployed**.
@@ -1518,16 +1677,17 @@ The complete ledger, including exact outputs and known gaps, is
 │   └── Dockerfile                     # binds $PORT, runs as uid 10001
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                # 17 components + tests
+│   │   ├── components/                # 22 components, 3 providers, and tests
 │   │   ├── hooks/useAnalytics.ts      # TanStack Query hooks
-│   │   ├── lib/                       # formatting, CSV serialization
+│   │   ├── lib/                       # formatting, CSV, guide step definitions
 │   │   ├── pages/                     # Overview, Forecast explorer, Accuracy, Data
 │   │   ├── services/api.ts            # typed API client and error mapping
 │   │   ├── types/api.ts               # API response types
-│   │   ├── App.tsx                    # lazy routes and 404
+│   │   ├── App.tsx                    # providers, lazy routes, 404
 │   │   ├── main.tsx                   # QueryClient, Router, StrictMode
-│   │   └── index.css                  # fonts, tokens, component layers, responsive tables
-│   ├── e2e/                           # functional flows + axe checks
+│   │   └── index.css                  # fonts, theme tokens, component layers, responsive tables
+│   ├── index.html                     # pre-paint theme restore and theme-color meta
+│   ├── e2e/                           # 6 analysis + 9 theme/guide flows, 7 axe checks
 │   ├── scripts/check-bundle-budget.mjs
 │   ├── tailwind.config.js             # colors, fonts, shadows, keyframes
 │   ├── playwright.config.ts           # 3 browsers, ports 8001/5174
@@ -1582,6 +1742,17 @@ Frontend (`.env.local`; see [`frontend/.env.example`](frontend/.env.example)):
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | unset → same origin (production), `http://localhost:8000` (dev) | Analytics API base URL |
+
+Browser storage (no configuration required):
+
+| Key | Values | Purpose |
+| --- | --- | --- |
+| `gridbricks.theme` | `paper`, `light`, `dark` | Chosen theme; absent means the chooser opens on the next visit |
+
+The value is written only when a theme is confirmed. If `localStorage` is
+unavailable (some private modes throw), the choice still applies for the
+session and the app falls back to Paper on reload. The guide stores no state
+and always starts from step 1.
 
 Precedence: environment variables override `.env`; `pydantic-settings` reads
 the root and backend files in that order. `VITE_API_BASE_URL` is compiled at
@@ -1660,13 +1831,13 @@ exercised; **Local only** = configured and exercised locally, not deployed;
 | MATCH-01 | Interval matching | **Verified** | Missing halves excluded; duplicate policies tested |
 | METRIC-01 | MAE/RMSE/MBE, no-data handling | **Verified** | Known-value and empty-input tests |
 | METRIC-02 | Decision-support measures | **Verified** | P90/P95, P90 shortfall, underforecast share, lead-time buckets |
-| A11Y-01 | Accessible interface | **Verified** | axe critical/serious clean on four routes; defects found and fixed |
+| A11Y-01 | Accessible interface | **Verified** | axe critical/serious clean on four routes, the theme chooser, the guide overlay, and the dark theme |
 | API-01 | Documented typed API | **Verified** | OpenAPI at `/docs`; `docs/api.md`; contract and request-id tests |
-| UI-01/02 | Views and all states | **Verified** | Four routes; loading/error/partial/fallback; URL-addressable selection |
-| TEST-01 | At least one E2E path | **Verified** | 22 passing Playwright results across three browsers |
+| UI-01/02 | Views and all states | **Verified** | Four routes; theme chooser with three themes; 19-step site guide; loading/error/partial/fallback; URL-addressable selection |
+| TEST-01 | At least one E2E path | **Verified** | 44 passing Playwright results across three browsers |
 | OPS-01 | Docker | **Verified** | Snapshot smoke with both healthchecks, 744/744 API, SPA routing, CORS |
 | OPS-02 | Vercel/Heroku deployment | **Local only** | Vercel Services config exercised with `vercel dev --local`; no URL claimed |
-| OPS-03 | CI workflow | **Verified** | Local gate 175 s; GitHub Actions run `40907058285` green |
+| OPS-03 | CI workflow | **Verified** | Local gate 161 s including 44 E2E passes with themes and the guide; GitHub Actions run `40907058285` green before that work |
 | DOC-01/02 | README + AI disclosure | **Verified** | This README and the disclosure below |
 | DEL-01 | Public repository | **Verified** | `github.com/GauravKaloliya/Gridbricks` |
 | DEL-02..04 | Video, submission | **Pending** | Require recording and human submission |
@@ -1718,6 +1889,12 @@ exercised; **Local only** = configured and exercised locally, not deployed;
 - **Browser coverage.** Functional flows run in Chromium, Firefox, and WebKit;
   layout was checked at 320–1440 px. Axe runs on Chromium only, and real mobile
   devices and a screen-reader session were not tested.
+- **Theme and guide are client-side.** The selected theme is stored per browser
+  in `localStorage`; it does not follow a user across devices. The guide stores
+  no progress and always starts from step 1.
+- **Guide geometry coverage.** Overlap and enclosure assertions run in Chromium;
+  Firefox and WebKit run the functional flows. The layout was audited at five
+  viewports but not on physical devices.
 - **Vercel Services is Beta.** The one-project deployment is documented and
   locally exercised; a public deployment URL is not live.
 - **Decision support is descriptive.** P90/P95 error and shortfall describe the
@@ -1785,6 +1962,29 @@ always labelled as a snapshot. Live mode remains available in containers.
 **Why is MBE positive?**
 The eligible forecasts were, on average, above delivered generation. Positive
 MBE means overforecast under the `forecast − actual` convention.
+
+**Where is my theme saved?**
+In `localStorage` under `gridbricks.theme`. An inline script in `index.html`
+applies the saved value before first paint, so the page never flashes the
+default theme. The header control reopens the same chooser, and a change made
+in one tab is applied in another.
+
+**Why does the guide freeze the page?**
+It points at controls where they actually sit. Freezing the shell — `inert`,
+locked scrolling, and a compensated scrollbar — keeps the spotlight aligned and
+prevents clicks or tabbing into the background. Every style and focus target is
+restored on exit.
+
+**Why are some guide highlights capped?**
+The revision audit, decision support, and data table are taller than the
+viewport at desktop sizes, and on short viewports any section can leave too
+little room for a 240 px card. Those windows are capped and fade into the scrim
+at the bottom instead of ending in a border. Wherever the full outline and a
+readable card both fit, the section is enclosed completely.
+
+**Can I skip the theme chooser?**
+Yes. Closing it uses Paper for that visit and asks again on the next visit
+until a theme is chosen. Choosing one, from either dialog, stops the prompt.
 
 **Why is there no live URL?**
 The Vercel configuration is committed and was exercised with

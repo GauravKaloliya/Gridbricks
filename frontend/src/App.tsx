@@ -2,7 +2,9 @@ import { lazy } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
 import { DateRangeProvider } from "./components/DateRangeContext";
+import { GuideProvider } from "./components/GuideContext";
 import { Layout } from "./components/Layout";
+import { ThemeProvider } from "./components/ThemeContext";
 
 const OverviewPage = lazy(() =>
   import("./pages/OverviewPage").then((module) => ({
@@ -48,16 +50,20 @@ function NotFoundPage() {
 
 export default function App() {
   return (
-    <DateRangeProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<OverviewPage />} />
-          <Route path="forecasts" element={<ForecastExplorerPage />} />
-          <Route path="accuracy" element={<AccuracyPage />} />
-          <Route path="data" element={<DataPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </DateRangeProvider>
+    <ThemeProvider>
+      <GuideProvider>
+        <DateRangeProvider>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route index element={<OverviewPage />} />
+              <Route path="forecasts" element={<ForecastExplorerPage />} />
+              <Route path="accuracy" element={<AccuracyPage />} />
+              <Route path="data" element={<DataPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </DateRangeProvider>
+      </GuideProvider>
+    </ThemeProvider>
   );
 }

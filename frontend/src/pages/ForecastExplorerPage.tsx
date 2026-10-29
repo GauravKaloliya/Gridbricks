@@ -104,6 +104,7 @@ export function ForecastExplorerPage() {
               className="lg:col-span-2"
               title="Selected delivery interval"
               subtitle={`Times shown in ${timezoneLabel(selectedInterval.start_time)}`}
+              tourId="forecast-selected"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -194,6 +195,7 @@ export function ForecastExplorerPage() {
             <SectionCard
               title="Intervals"
               subtitle="Pick a day and hour to audit"
+              tourId="forecast-picker"
             >
               <label className="block">
                 <span className="kicker mb-1 block">Delivery day</span>
@@ -254,6 +256,7 @@ export function ForecastExplorerPage() {
             className="lg:max-w-[1080px]"
             title="Forecast revision audit"
             subtitle="Every WINDFOR version for the selected delivery hour"
+            tourId="forecast-revisions"
           >
             <RevisionsPanel startTime={selectedInterval.start_time} />
           </SectionCard>

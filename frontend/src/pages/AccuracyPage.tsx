@@ -132,6 +132,7 @@ export function AccuracyPage() {
           <SectionCard
             title="Signed error by delivery interval"
             subtitle={`${formatLongDate(range.start)} – ${formatLongDate(range.end)} · forecast − actual in MW`}
+            tourId="accuracy-chart"
           >
             <ErrorChart intervals={query.data.intervals} />
           </SectionCard>
@@ -141,6 +142,7 @@ export function AccuracyPage() {
             <SectionCard
               title="Decision support"
               subtitle="What the measured error implies for reserve cover, and how accuracy changes with forecast lead time."
+              tourId="decision-support"
             >
               <DecisionSupportPanel
                 decision={query.data.decision_support}
@@ -153,6 +155,7 @@ export function AccuracyPage() {
             <SectionCard
               title="Coverage and data quality"
               subtitle="How the candidate hours resolve into the scored set."
+              tourId="accuracy-coverage"
             >
               <dl>
                 <CountRow

@@ -39,8 +39,10 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/.playwright/
 
-# Local visual-QA captures
+# Local visual-QA captures and scratch scripts
+/.screenshots/
 frontend/.screenshots/
+frontend/.tmp-*
 
 # Vercel
 .vercel/

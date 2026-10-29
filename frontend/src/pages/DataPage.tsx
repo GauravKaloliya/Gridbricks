@@ -111,6 +111,7 @@ export function DataPage() {
             role="tablist"
             aria-label="Data table view"
             className="grid grid-cols-2 gap-x-4 border-b border-rule sm:flex sm:gap-8"
+            data-tour="data-tabs"
           >
             <button
               type="button"
@@ -167,6 +168,7 @@ export function DataPage() {
             <SectionCard
               title="Interval detail"
               subtitle={query.data.matching_rule}
+              tourId="data-table"
               action={
                 <CsvExportButton
                   intervals={query.data.intervals}
@@ -184,7 +186,7 @@ export function DataPage() {
               <FreshnessBadge freshness={query.data.freshness} />
             </SectionCard>
 
-            <SectionCard title="Source and scope">
+            <SectionCard title="Source and scope" tourId="data-source">
               {meta.isPending ? (
                 <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-mute">
                   Loading source notes…

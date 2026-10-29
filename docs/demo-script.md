@@ -152,15 +152,16 @@ Run or show:
 
 ```bash
 cd backend && .venv/bin/python -m pytest -q     # 78 passed
-cd frontend && npm test                          # 42 passed
-cd frontend && npm run test:e2e                  # 22 passing, 3 browsers + axe
+cd frontend && npm test                          # 47 passed
+cd frontend && npm run test:e2e                  # 44 passing, 22 platform skips
 cd frontend && npm run build                     # tsc + vite build
 bash scripts/verify.sh                           # full local gate (~2–3 min)
 ```
 
-Mention that the E2E suite runs every functional flow in Chromium, Firefox and
-WebKit, plus axe on all four routes in Chromium, and fails on critical or
-serious violations. Accessibility runs found and fixed four real defects.
+Mention that the E2E suite runs every analysis flow in Chromium, Firefox and
+WebKit, plus axe on all four routes, the theme chooser, the guide overlay and
+the dark theme in Chromium, and fails on critical or serious violations.
+Accessibility runs found and fixed four real defects.
 
 Show FastAPI `/docs` and one response, e.g. `/api/forecast-revisions` for
 1 Jan 00:00, highlighting `eligible: false` after the cutoff.

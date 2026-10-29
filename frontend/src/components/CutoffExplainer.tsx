@@ -8,7 +8,7 @@ export function CutoffExplainer({
   matchingRule?: string;
 }) {
   return (
-    <section className="border-t-2 border-ink pt-5">
+    <section className="border-t-2 border-ink pt-5" data-tour="cutoff-method">
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-12">
         <div>
           <p className="kicker flex items-center gap-2">

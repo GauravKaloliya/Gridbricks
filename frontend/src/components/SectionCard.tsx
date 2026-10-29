@@ -6,15 +6,17 @@ export function SectionCard({
   action,
   children,
   className = "",
+  tourId,
 }: {
   title?: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  tourId?: string;
 }) {
   return (
-    <section className={`relative pt-5 ${className}`}>
+    <section className={`relative pt-5 ${className}`} data-tour={tourId}>
       <span
         aria-hidden="true"
         className="absolute left-0 right-0 top-0 h-[2px] origin-left animate-rule-in bg-ink"

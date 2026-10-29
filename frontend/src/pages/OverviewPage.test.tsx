@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DateRangeProvider } from "../components/DateRangeContext";
+import { ThemeProvider } from "../components/ThemeContext";
 import { useAccuracy } from "../hooks/useAnalytics";
 import { OverviewPage } from "./OverviewPage";
 import type { AccuracyResponse, IntervalResult } from "../types/api";
@@ -101,9 +102,11 @@ function renderPage() {
         initialEntries={["/?start=2026-01-01&end=2026-01-02"]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
-        <DateRangeProvider>
-          <OverviewPage />
-        </DateRangeProvider>
+        <ThemeProvider>
+          <DateRangeProvider>
+            <OverviewPage />
+          </DateRangeProvider>
+        </ThemeProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );

@@ -18,6 +18,7 @@ import {
 import type { IntervalResult } from "../types/api";
 import { DateAxisTick } from "./DateAxisTick";
 import { EmptyState } from "./States";
+import { useChartPalette } from "./ThemeContext";
 
 interface ChartPoint {
   start: string;
@@ -25,12 +26,6 @@ interface ChartPoint {
   actual: number | null;
   status: IntervalResult["status"];
 }
-
-const AXIS_TICK = {
-  fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-  fontSize: 9,
-  fill: "#6b665a",
-};
 
 function ChartTooltip({
   active,
@@ -76,6 +71,12 @@ function ChartTooltip({
 }
 
 export function ForecastActualChart({ intervals }: { intervals: IntervalResult[] }) {
+  const palette = useChartPalette();
+  const axisTick = {
+    fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+    fontSize: 9,
+    fill: palette.inkMute,
+  };
   const data: ChartPoint[] = intervals.map((interval) => ({
     start: interval.start_time,
     forecast: interval.forecast_generation,
@@ -117,13 +118,13 @@ export function ForecastActualChart({ intervals }: { intervals: IntervalResult[]
           <ComposedChart data={data} margin={{ top: 14, right: 28, bottom: 4, left: 0 }}>
             <defs>
               <linearGradient id="actualArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1b5e57" stopOpacity={0.16} />
-                <stop offset="70%" stopColor="#1b5e57" stopOpacity={0.04} />
-                <stop offset="100%" stopColor="#1b5e57" stopOpacity={0} />
+                <stop offset="0%" stopColor={palette.actual} stopOpacity={0.16} />
+                <stop offset="70%" stopColor={palette.actual} stopOpacity={0.04} />
+                <stop offset="100%" stopColor={palette.actual} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
-              stroke="rgba(23,21,15,0.14)"
+              stroke={palette.grid}
               strokeDasharray="1 4"
               vertical={false}
             />
@@ -132,13 +133,13 @@ export function ForecastActualChart({ intervals }: { intervals: IntervalResult[]
               tickFormatter={formatAxisDateTime}
               minTickGap={56}
               tick={<DateAxisTick />}
-              axisLine={{ stroke: "rgba(23,21,15,0.25)" }}
+              axisLine={{ stroke: palette.axisLine }}
               tickLine={false}
               tickMargin={10}
             />
             <YAxis
               tickFormatter={(value: number) => formatMW(value)}
-              tick={AXIS_TICK}
+              tick={axisTick}
               axisLine={false}
               tickLine={false}
               width={52}
@@ -146,7 +147,7 @@ export function ForecastActualChart({ intervals }: { intervals: IntervalResult[]
             />
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ stroke: "rgba(23,21,15,0.3)", strokeDasharray: "3 3" }}
+              cursor={{ stroke: palette.cursorLine, strokeDasharray: "3 3" }}
               isAnimationActive={false}
             />
             <Area
@@ -160,10 +161,15 @@ export function ForecastActualChart({ intervals }: { intervals: IntervalResult[]
             <Line
               type="monotone"
               dataKey="actual"
-              stroke="#1b5e57"
+              stroke={palette.actual}
               strokeWidth={1.8}
               dot={false}
-              activeDot={{ r: 3, fill: "#fbf9f3", stroke: "#1b5e57", strokeWidth: 1.5 }}
+              activeDot={{
+                r: 3,
+                fill: palette.paperRaised,
+                stroke: palette.actual,
+                strokeWidth: 1.5,
+              }}
               connectNulls={false}
               isAnimationActive={false}
               name="actual"
@@ -171,11 +177,16 @@ export function ForecastActualChart({ intervals }: { intervals: IntervalResult[]
             <Line
               type="monotone"
               dataKey="forecast"
-              stroke="#c6431e"
+              stroke={palette.signal}
               strokeWidth={1.5}
               strokeDasharray="5 4"
               dot={false}
-              activeDot={{ r: 3, fill: "#fbf9f3", stroke: "#c6431e", strokeWidth: 1.5 }}
+              activeDot={{
+                r: 3,
+                fill: palette.paperRaised,
+                stroke: palette.signal,
+                strokeWidth: 1.5,
+              }}
               connectNulls={false}
               isAnimationActive={false}
               name="forecast"

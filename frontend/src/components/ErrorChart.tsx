@@ -19,17 +19,12 @@ import {
 import type { IntervalResult } from "../types/api";
 import { DateAxisTick } from "./DateAxisTick";
 import { EmptyState } from "./States";
+import { useChartPalette } from "./ThemeContext";
 
 interface ErrorPoint {
   start: string;
   signed_error: number;
 }
-
-const AXIS_TICK = {
-  fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-  fontSize: 9,
-  fill: "#6b665a",
-};
 
 function ErrorTooltip({
   active,
@@ -63,6 +58,12 @@ function ErrorTooltip({
 }
 
 export function ErrorChart({ intervals }: { intervals: IntervalResult[] }) {
+  const palette = useChartPalette();
+  const axisTick = {
+    fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+    fontSize: 9,
+    fill: palette.inkMute,
+  };
   const data: ErrorPoint[] = intervals
     .filter(
       (interval) =>
@@ -106,7 +107,7 @@ export function ErrorChart({ intervals }: { intervals: IntervalResult[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 14, right: 28, bottom: 4, left: 0 }}>
             <CartesianGrid
-              stroke="rgba(23,21,15,0.14)"
+              stroke={palette.grid}
               strokeDasharray="1 4"
               vertical={false}
             />
@@ -115,13 +116,13 @@ export function ErrorChart({ intervals }: { intervals: IntervalResult[] }) {
               tickFormatter={formatAxisDateTime}
               minTickGap={56}
               tick={<DateAxisTick />}
-              axisLine={{ stroke: "rgba(23,21,15,0.25)" }}
+              axisLine={{ stroke: palette.axisLine }}
               tickLine={false}
               tickMargin={10}
             />
             <YAxis
               tickFormatter={(value: number) => formatMW(value)}
-              tick={AXIS_TICK}
+              tick={axisTick}
               axisLine={false}
               tickLine={false}
               width={54}
@@ -129,15 +130,15 @@ export function ErrorChart({ intervals }: { intervals: IntervalResult[] }) {
             />
             <Tooltip
               content={<ErrorTooltip />}
-              cursor={{ fill: "rgba(23,21,15,0.05)" }}
+              cursor={{ fill: palette.cursorFill }}
               isAnimationActive={false}
             />
-            <ReferenceLine y={0} stroke="rgba(23,21,15,0.55)" strokeWidth={1} />
+            <ReferenceLine y={0} stroke={palette.reference} strokeWidth={1} />
             <Bar dataKey="signed_error" name="Signed error" isAnimationActive={false} maxBarSize={14}>
               {data.map((point) => (
                 <Cell
                   key={point.start}
-                  fill={point.signed_error >= 0 ? "#c6431e" : "#1b5e57"}
+                  fill={point.signed_error >= 0 ? palette.signal : palette.actual}
                   fillOpacity={0.82}
                 />
               ))}
