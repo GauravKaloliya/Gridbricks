@@ -344,9 +344,10 @@ the four jobs in `.github/workflows/ci.yml`.
 The workflow runs on every push to `main`. The first hosted run
 (`40905624417`, commit `11975a9`) passed backend, frontend and Playwright and
 failed the container job: `scripts/smoke.sh` passed the full-month API
-response (several megabytes) as a command-line argument, which exceeds Linux's
-per-argument limit even though macOS accepted it. The script now pipes the
-JSON into Python on stdin. After the fix and an Actions major-version update,
+response (279,016 bytes, about 273 KiB) as a command-line argument, which
+exceeds Linux's per-argument limit even though macOS accepted it. The script
+now pipes the JSON into Python on stdin. After the fix and an Actions
+major-version update,
 run `40906353001` (commit `6569904`) passed all four jobs:
 
 ```text
